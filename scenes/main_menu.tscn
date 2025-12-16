@@ -1,0 +1,87 @@
+[gd_scene load_steps=2 format=3 uid="uid://d0gec3f7cuh0c"]
+
+[ext_resource type="Script" uid="uid://ckd2mimeq1qiu" path="res://scripts/main_menu.gd" id="1_l6cm7"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_l6cm7")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Main" type="HBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="Central" type="VBoxContainer" parent="CenterContainer/Main"]
+layout_mode = 2
+
+[node name="HostGame" type="Button" parent="CenterContainer/Main/Central"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 60
+text = "Host Game"
+
+[node name="JoinGame" type="Button" parent="CenterContainer/Main/Central"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 60
+text = "Join Game"
+
+[node name="Settings" type="Button" parent="CenterContainer/Main/Central"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 60
+text = "Settings"
+
+[node name="Quit" type="Button" parent="CenterContainer/Main/Central"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 60
+text = "Quit"
+
+[node name="VSeparator" type="VSeparator" parent="CenterContainer/Main"]
+visible = false
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="Settings" type="TabContainer" parent="CenterContainer/Main"]
+visible = false
+layout_mode = 2
+
+[node name="HostGame" type="ScrollContainer" parent="CenterContainer/Main"]
+visible = false
+custom_minimum_size = Vector2(329, 0)
+layout_mode = 2
+
+[node name="SaveList" type="VBoxContainer" parent="CenterContainer/Main/HostGame"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/Main/HostGame/SaveList"]
+custom_minimum_size = Vector2(329, 0)
+layout_mode = 2
+
+[node name="CreateGame" type="Button" parent="CenterContainer/Main/HostGame/SaveList/CenterContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Create Game"
+
+[connection signal="pressed" from="CenterContainer/Main/Central/HostGame" to="." method="_on_host_game_pressed"]
+[connection signal="pressed" from="CenterContainer/Main/Central/JoinGame" to="." method="_on_join_game_pressed"]
+[connection signal="pressed" from="CenterContainer/Main/Central/Settings" to="." method="_on_settings_pressed"]
+[connection signal="pressed" from="CenterContainer/Main/Central/Quit" to="." method="_on_quit_pressed"]
+[connection signal="pressed" from="CenterContainer/Main/HostGame/SaveList/CenterContainer/CreateGame" to="." method="_on_create_game_pressed"]
