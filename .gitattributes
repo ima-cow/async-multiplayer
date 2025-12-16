@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# Normalize EOL for all files that Git considers text files.
-* text=auto eol=lf
-=======
 # Properly detect languages on Github
 *.h linguist-language=C++
 *.inc linguist-language=C++
@@ -25,4 +21,3 @@ misc/msvs/* eol=crlf
 *.png binary
 *.ttf binary
 *.tza binary
->>>>>>> 4cf60789bbdc41413130a2182e3b867b57284c4f
