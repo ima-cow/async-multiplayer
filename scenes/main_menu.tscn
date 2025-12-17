@@ -33,6 +33,12 @@ layout_mode = 2
 [node name="Central" type="VBoxContainer" parent="CenterContainer/Main"]
 layout_mode = 2
 
+[node name="TextEdit" type="TextEdit" parent="CenterContainer/Main/Central"]
+custom_minimum_size = Vector2(0, 91)
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+placeholder_text = "Username..."
+
 [node name="HostGame" type="Button" parent="CenterContainer/Main/Central"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60

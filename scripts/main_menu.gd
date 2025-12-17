@@ -1,58 +1,65 @@
 extends Control
 
 var settings:Dictionary[String, Variant] = {
-	"save_names":[],
+	"username":""
 }
 
+var save_names:Array[String]
+
+
 func _ready() -> void:
-	var settings_file: FileAccess
-	var err: Error #this fucntion can error, not returned game panics
+	var err:Error
 	
-	#if settings dont exist set the defaults
-	#if they do read the file into settings
+	#if save directory doesnt exist make it
+	if !DirAccess.dir_exists_absolute("user://saves"):
+		err = DirAccess.make_dir_absolute("user://saves")
+		assert(!err, "Failed to create save directory: "+error_string(err))
+	
+	#load names of saves into save_names
+	var save_dir := DirAccess.open("user://saves")
+	err = DirAccess.get_open_error()
+	assert(!err, "Failed to access save folder: "+error_string(err))
+	
+	save_dir.list_dir_begin()
+	var file_name := save_dir.get_next()
+	while file_name != "":
+		if !save_dir.current_is_dir():
+			if file_name.substr(file_name.length()-4) == ".dat":
+				print("Found save: " + file_name)
+				var file_name_value := file_name.substr(0, file_name.length()-4)
+				save_names.append(file_name_value)
+			else:
+				print("Unknown file type found in save directory: "+file_name)
+		else:
+			print("Unknown directory found in save directory: "+file_name)
+		file_name = save_dir.get_next()
+	
+	#if settings dont exist set the defaults, if they do read the file into settings
+	var settings_file: FileAccess
+	
 	if !FileAccess.file_exists("user://settings.dat"):
 		settings_file = FileAccess.open("user://settings.dat", FileAccess.WRITE)
 		err = FileAccess.get_open_error()
-		if err:
-			printerr("Failed to load settings: ",err)
-			get_tree().paused = true
-			
-		if !settings_file.store_var(settings):
-			printerr("Failed to set default settings: ",err)
-			get_tree().paused = true
+		assert(!err, "Failed to load settings: "+error_string(err))
+		assert(settings_file.store_var(settings), "Failed to set default settings")
 	else:
 		settings_file = FileAccess.open("user://settings.dat", FileAccess.READ)
 		err = FileAccess.get_open_error()
-		if err:
-			printerr("Failed to load settings: ",err)
-			get_tree().paused = true
+		assert(!err, "Failed to load settings: "+error_string(err))
 		
 		var data:Variant = settings_file.get_var()
-		if data is Dictionary[String, Variant]:
-			settings = data
-		else:
-			printerr("Settings data is corrupted or missing: ", Error.ERR_FILE_CORRUPT)
-			get_tree().paused = true
+		assert(data is Dictionary[String, Variant], "Settings data is corrupted or missing")
+		settings = data
 
 
-func _on_host_game_pressed() -> void: #this function can error, not returned so game panics
+func _on_host_game_pressed() -> void: 
 	#show the host game menu
 	$CenterContainer/Main/VSeparator.visible = true
 	$CenterContainer/Main/HostGame.visible = true
-	
+
 	#display a button for every valid save
-	if settings["save_names"] is Array:
-		if settings["save_names"].size() != 0:
-			for save_name in settings["save_names"]:
-				if save_name is String:
-					_create_save_button(save_name)
-				else:
-					printerr("Save name data is corrupted: ", Error.ERR_INVALID_DATA)
-					get_tree().paused = true
-	else:
-		printerr("Save name data is corrupted: ", Error.ERR_INVALID_DATA)
-		get_tree().paused = true
-		
+	for save_name in save_names:
+		_create_open_save_button(save_name)
 
 
 func _on_create_game_pressed() -> void:
@@ -61,35 +68,38 @@ func _on_create_game_pressed() -> void:
 		var name_field := LineEdit.new()
 		name_field.placeholder_text = "Save name..."
 		name_field.max_length = 30
-		
+
 		%SaveList.add_child(name_field)
 		%SaveList.move_child(name_field, 1)
-		
+
 		await name_field.text_submitted
-		
-		#afer waiting for name to be submited add it to dict and create a button 
-		settings["save_names"].push_front(name_field.text)
-		
-		_create_save_button(name_field.text)
+
+		#afer waiting for name to be submited add it to dict and create a button
+		save_names.push_front(name_field.text)
+
+		_create_open_save_button(name_field.text)
 		name_field.queue_free()
 
 
-func _create_save_button(save_name: String) -> void:
-	#create a button for a save and delete and connect signals
+func _create_open_save_button(save_name: String) -> void:
+	#create a button for a save and connect signals
 	var save_container := HBoxContainer.new()
-	
-	var save_button := Button.new()
-	save_button.text = save_name
-	save_button.name = save_name
-	save_button.custom_minimum_size.x = 307
-	
-	var delete_save_button := Button.new()
-	delete_save_button.text = "X"
-	
+	save_container.name = save_name
+
+	var open_save_button := Button.new()
+	open_save_button.text = save_name
+	open_save_button.custom_minimum_size.x = 307
+
+	var delete_open_save_button := Button.new()
+	delete_open_save_button.text = "X"
+
 	%SaveList.add_child(save_container)
 	%SaveList.move_child(save_container, 1)
-	save_container.add_child(save_button)
-	save_container.add_child(delete_save_button)
+	save_container.add_child(open_save_button)
+	save_container.add_child(delete_open_save_button)
+
+	open_save_button.pressed.connect(_on_open_save_button_pressed.bind(save_name))
+	delete_open_save_button.pressed.connect(_on_save_delete_button_pressed.bind(save_name))
 
 
 func _on_join_game_pressed() -> void:
@@ -101,30 +111,47 @@ func _on_settings_pressed() -> void:
 
 
 func _on_quit_pressed() -> void:
-	var err := _save_settings()
-	if err:
-		printerr("Failed to save settings: ", err)
-		get_tree().paused = true
-	
+	assert(!_save_settings(), "Failed to save settings")
 	get_tree().quit()
 
 
 func _save_settings() -> Error:
-	var settings_file: FileAccess
-	var err: Error #this function can error
-	
-	settings_file = FileAccess.open("user://settings.dat", FileAccess.WRITE)
-	err = FileAccess.get_open_error()
+	var settings_file := FileAccess.open("user://settings.dat", FileAccess.WRITE)
+	var err := FileAccess.get_open_error() #this function can error
 	if err:
 		return err
-	
+
 	if !settings_file.store_var(settings):
-		return Error.ERR_FILE_CANT_WRITE
-	
-	return Error.OK
+		return ERR_FILE_CANT_WRITE
+
+	return OK
 
 
-func _on_save_button_pressed() -> Error:
-	var err: Error
+func _on_open_save_button_pressed(save_name:String) -> void:
+	var err:Error
 	
-	return Error.OK
+	var game:Node = load("res://scenes/game.tscn").instantiate()
+	get_tree().root.add_child(game)
+	
+	#if save file is found loads the data, otherwise writes a file with defaults
+	var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE_READ)
+	err = FileAccess.get_open_error() 
+	assert(!err, "Failed to access save file: "+error_string(err))
+	
+	var save_file_size := FileAccess.get_size("user://saves/"+save_name+".dat")
+	assert(save_file_size != -1, "Failed to access save file")
+	if save_file_size == 0:
+		assert(save_file.store_var(game.data), "Failed to write defaults to save file")
+	else:
+		var data:Variant = save_file.get_var()
+		assert(data is Dictionary[String, Variant], "Save data is corrupted or missing")
+		game.data = data
+		
+		var diffs:Variant = save_file.get_var()
+		assert(diffs is Dictionary[String, Dictionary], "Save diffs are corrupted or missing")
+		game.diffs = diffs
+
+func _on_save_delete_button_pressed(save_name:String) -> void:
+	#erase save from dict and delete the corrisponding button
+	save_names.erase(save_name)
+	get_node("%SaveList/"+save_name).queue_free()

@@ -4,8 +4,10 @@ const SERVER_PORT := 8080
 signal game_start
 
 
+
+
 func host_game() -> Error:
-	var err: Error # this function can error
+	var err: Error 
 	
 	print("starting server")
 	var server_peer := ENetMultiplayerPeer.new()
@@ -24,7 +26,7 @@ func host_game() -> Error:
 	
 	game_start.emit()
 	
-	return Error.OK
+	return OK
 
 
 func join_game(ip_address: String) -> Error:
@@ -38,12 +40,12 @@ func join_game(ip_address: String) -> Error:
 	
 	game_start.emit()
 	
-	return Error.OK
+	return OK
 
 
-func _on_peer_connected(id: int):
+func _on_peer_connected(id: int) -> void:
 	print("player %s has joined" % id)
 
 
-func _on_peer_disconnected(id: int):
+func _on_peer_disconnected(id: int) -> void:
 	print("player %s has left" % id)
