@@ -4,8 +4,6 @@ const SERVER_PORT := 8080
 signal game_start
 
 
-
-
 func host_game() -> Error:
 	var err: Error 
 	
