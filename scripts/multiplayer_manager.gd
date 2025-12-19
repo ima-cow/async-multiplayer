@@ -1,3 +1,6 @@
+#DEPRITATED we now use steam for multiplayer
+
+
 extends Node
 
 const SERVER_PORT := 8080
