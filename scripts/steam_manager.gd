@@ -8,8 +8,11 @@ func _ready() -> void:
 	var steamInitStatus := Steam.steamInitEx(APP_ID)
 	assert(steamInitStatus["status"] == OK, "Failed to initialize steam: "+steamInitStatus["verbal"])
 	Steam.initRelayNetworkAccess()
-	#STEAM_ID = Steam.getSteamID()
+	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
+	Steam.lobby_created.connect(_on_lobby_created)
 
+func _on_lobby_created(connect: int, lobby_id: int) -> void:
+	Steam.joinLobby(lobby_id)
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
