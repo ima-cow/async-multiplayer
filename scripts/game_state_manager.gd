@@ -19,16 +19,17 @@ var data: Dictionary[String, Variant] = {
 var diffs:Dictionary[int, Dictionary]
 
 
+
 #func set_value(key:String, value:Variant):
 	#for player_id:int in diffs:
 		#if multiplayer.get_peers().has
 
-static func panic(condition: bool, destination: panic_destination, message: String, pause_editor: bool = false) -> void:
-	if condition:
-		return
-	
-	push_error(message)
-	
-	match destination:
-		panic_destination.ERROR_CONSOLE when pause_editor:
+#static func panic(condition: bool, destination: panic_destination, message: String, pause_editor: bool = false) -> void:
+	#if condition:
+		#return
+	#
+	#push_error(message)
+	#
+	#match destination:
+		#panic_destination.ERROR_CONSOLE when pause_editor:
 			

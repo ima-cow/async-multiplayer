@@ -15,7 +15,7 @@ func _process(_delta: float) -> void:
 	Steam.run_callbacks()
 
 
-func get_friend_hosted_lobbies() -> Dictionary:
+func get_friend_lobbies() -> Dictionary[int, Array]:
 	var result: Dictionary[int, Array]
 	
 	#get all normal steam friends

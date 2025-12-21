@@ -54,6 +54,7 @@ func _ready() -> void:
 
 func _on_host_game_pressed() -> void: 
 	#show the host game menu
+	_close_menus()
 	$CenterContainer/Main/VSeparator.visible = true
 	$CenterContainer/Main/HostGame.visible = true
 
@@ -63,7 +64,7 @@ func _on_host_game_pressed() -> void:
 
 
 func _on_create_game_pressed() -> void:
-	#create field for new save if there is one
+	#create field for new save if there isnt already one
 	if %SaveList.get_child_count() == 1 or %SaveList.get_child(1) is not LineEdit:
 		var name_field := LineEdit.new()
 		name_field.placeholder_text = "Save name..."
@@ -102,31 +103,6 @@ func _create_open_save_button(save_name: String) -> void:
 	delete_open_save_button.pressed.connect(_on_save_delete_button_pressed.bind(save_name))
 
 
-func _on_join_game_pressed() -> void:
-	pass
-
-
-func _on_settings_pressed() -> void:
-	pass
-
-
-func _on_quit_pressed() -> void:
-	assert(!_save_settings(), "Failed to save settings")
-	get_tree().quit()
-
-
-func _save_settings() -> Error:
-	var settings_file := FileAccess.open("user://settings.dat", FileAccess.WRITE)
-	var err := FileAccess.get_open_error() #this function can error
-	if err:
-		return err
-
-	if !settings_file.store_var(settings):
-		return ERR_FILE_CANT_WRITE
-
-	return OK
-
-
 func _on_open_save_button_pressed(save_name:String) -> void:
 	var err:Error
 	
@@ -151,7 +127,56 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 		assert(diffs is Dictionary[String, Dictionary], "Save diffs are corrupted or missing")
 		game.diffs = diffs
 
+
 func _on_save_delete_button_pressed(save_name:String) -> void:
 	#erase save from dict and delete the corrisponding button
 	save_names.erase(save_name)
 	get_node("%SaveList/"+save_name).queue_free()
+
+
+func _on_join_game_pressed() -> void:
+	#make joining menu visible
+	_close_menus()
+	$CenterContainer/Main/VSeparator.visible = true
+	$CenterContainer/Main/JoinGame.visible = true
+	
+	#for each lobby with friends in them create a button and set the text all of friends names in the lobby
+	var lobbies := SteamManager.get_friend_lobbies()
+	
+	for lobby in lobbies:
+		var lobby_button := Button.new()
+		for player_id: int in lobbies[lobby]:
+			lobby_button.text += " "+Steam.getPlayerNickname(player_id)
+		lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobbies.find_key(lobby)))
+		%JoinGame.add_child(lobby_button)
+
+
+func _on_lobby_button_pressed(lobby_id: int) -> void:
+	pass
+
+
+func _on_settings_pressed() -> void:
+	pass
+
+
+func _on_quit_pressed() -> void:
+	assert(!_save_settings(), "Failed to save settings")
+	get_tree().quit()
+
+
+func _save_settings() -> Error:
+	var settings_file := FileAccess.open("user://settings.dat", FileAccess.WRITE)
+	var err := FileAccess.get_open_error() #this function can error
+	if err:
+		return err
+
+	if !settings_file.store_var(settings):
+		return ERR_FILE_CANT_WRITE
+
+	return OK
+
+
+func _close_menus() -> void:
+	#hide all menus except for the main one
+	for i in range(1, $CenterContainer/Main.get_child_count()):
+		$CenterContainer/Main.get_child(i).visible = false

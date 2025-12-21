@@ -33,12 +33,6 @@ layout_mode = 2
 [node name="Central" type="VBoxContainer" parent="CenterContainer/Main"]
 layout_mode = 2
 
-[node name="TextEdit" type="TextEdit" parent="CenterContainer/Main/Central"]
-custom_minimum_size = Vector2(0, 91)
-layout_mode = 2
-theme_override_font_sizes/font_size = 40
-placeholder_text = "Username..."
-
 [node name="HostGame" type="Button" parent="CenterContainer/Main/Central"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
@@ -85,6 +79,24 @@ layout_mode = 2
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Create Game"
+
+[node name="JoinGame" type="ScrollContainer" parent="CenterContainer/Main"]
+visible = false
+custom_minimum_size = Vector2(329, 0)
+layout_mode = 2
+
+[node name="LobbieList" type="VBoxContainer" parent="CenterContainer/Main/JoinGame"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/Main/JoinGame/LobbieList"]
+custom_minimum_size = Vector2(329, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="CenterContainer/Main/JoinGame/LobbieList/CenterContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "Friends in game:"
 
 [connection signal="pressed" from="CenterContainer/Main/Central/HostGame" to="." method="_on_host_game_pressed"]
 [connection signal="pressed" from="CenterContainer/Main/Central/JoinGame" to="." method="_on_join_game_pressed"]
