@@ -6,7 +6,6 @@ var steam_id: int
 
 var peer_steam_ids: Dictionary[int, int]
 
-
 func _ready() -> void:
 	var steamInitStatus := Steam.steamInitEx(APP_ID)
 	assert(steamInitStatus["status"] == OK, "Failed to initialize steam: "+steamInitStatus["verbal"])
@@ -56,7 +55,7 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 		
 		multiplayer.multiplayer_peer = peer
 		
-	#connect our signals
+	
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.peer_connected.connect(_on_peer_connected.bind(steam_id))
@@ -64,6 +63,28 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 	
 	print("joined lobby")
+
+
+func _on_connected_to_server() -> void:
+	pass
+
+
+func _on_connection_failed() -> void:
+	assert(false, "Failed to connect to server")
+
+
+@warning_ignore("shadowed_variable")
+func _on_peer_connected(id: int, steam_id: int) -> void:
+	peer_steam_ids[id] = steam_id
+	if multiplayer.is_server():
+		load_peer_steam_ids.rpc_id(id, peer_steam_ids)
+
+func _on_peer_disconnected(id: int, _steam_id: int) -> void:
+	peer_steam_ids.erase(id)
+
+
+func _on_server_disconnected() -> void:
+	assert(false, "Server disconnected")
 
 
 func get_friend_lobbies() -> Dictionary[int, Array]:
@@ -95,24 +116,6 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 	return result
 
 
-func _on_connected_to_server() -> void:
-	#print(multiplayer.get_peers())
-	pass
-
-
-func _on_connection_failed() -> void:
-	assert(false, "Failed to connect to server")
-
-
-@warning_ignore("shadowed_variable")
-func _on_peer_connected(id: int, steam_id: int) -> void:
-	peer_steam_ids[id] = steam_id
-	print(id)
-
-
-func _on_peer_disconnected(id: int, _steam_id: int) -> void:
-	peer_steam_ids.erase(id)
-
-
-func _on_server_disconnected() -> void:
-	assert(false, "Server disconnected")
+@rpc()
+func load_peer_steam_ids(value: Dictionary[int, int]) -> void:
+	peer_steam_ids = value
