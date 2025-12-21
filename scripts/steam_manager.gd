@@ -14,13 +14,12 @@ func _ready() -> void:
 	Steam.lobby_created.connect(_on_lobby_created)
 	Steam.lobby_joined.connect(_on_lobby_joined)
 	
-	steam_id = Steam.current_steam_id
+	steam_id = Steam.getSteamID()
 
 
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
-	#print(multiplayer.get_peers())
 
 
 @warning_ignore("shadowed_variable", "shadowed_variable_base_class")
@@ -36,6 +35,7 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	assert(!err, "Failed to host lobby: "+error_string(err))
 	
 	multiplayer.multiplayer_peer = peer
+	peer_steam_ids[multiplayer.get_unique_id()] = steam_id
 	
 	print("created lobby")
 
@@ -66,7 +66,7 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 
 
 func _on_connected_to_server() -> void:
-	pass
+	_add_peer_steam_id.rpc(steam_id)
 
 
 func _on_connection_failed() -> void:
@@ -75,9 +75,8 @@ func _on_connection_failed() -> void:
 
 @warning_ignore("shadowed_variable")
 func _on_peer_connected(id: int, steam_id: int) -> void:
-	peer_steam_ids[id] = steam_id
 	if multiplayer.is_server():
-		load_peer_steam_ids.rpc_id(id, peer_steam_ids)
+		_add_peer_steam_id.rpc_id(id, self.steam_id)
 
 func _on_peer_disconnected(id: int, _steam_id: int) -> void:
 	peer_steam_ids.erase(id)
@@ -116,6 +115,6 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 	return result
 
 
-@rpc()
-func load_peer_steam_ids(value: Dictionary[int, int]) -> void:
-	peer_steam_ids = value
+@rpc() @warning_ignore("shadowed_variable")
+func _add_peer_steam_id(steam_id: int):
+	peer_steam_ids[multiplayer.get_remote_sender_id()] = steam_id

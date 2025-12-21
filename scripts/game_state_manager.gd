@@ -13,6 +13,4 @@ var diffs:Dictionary[int, Dictionary]
 
 
 
-#func set_value(key:String, value:Variant):
-	#for player_id:int in diffs:
-		#if multiplayer.get_peers().has
+#func set_value(key:String, value:Variant):w
