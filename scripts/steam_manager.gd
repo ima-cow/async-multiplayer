@@ -37,6 +37,7 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	
 	multiplayer.multiplayer_peer = peer
 	
+	print("created lobby")
 
 
 @warning_ignore("shadowed_variable")
@@ -60,6 +61,8 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 	multiplayer.peer_connected.connect(_on_peer_connected.bind(steam_id))
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected.bind(steam_id))
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	
+	print("joined lobby")
 
 
 func get_friend_lobbies() -> Dictionary[int, Array]:
