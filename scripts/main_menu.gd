@@ -147,7 +147,6 @@ func _on_join_game_pressed() -> void:
 	
 	for lobby_id in lobbies:
 		var lobby_button := Button.new()
-		print(lobbies[lobby_id])
 		for player_id: int in lobbies[lobby_id]:
 			lobby_button.text += " "+Steam.getFriendPersonaName(player_id)
 		lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobby_id))

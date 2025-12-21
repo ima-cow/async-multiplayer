@@ -4,13 +4,17 @@ const APP_ID := 480
 var lobby_id := -1
 var steam_id: int
 
+var peer_steam_ids: Dictionary[int, int]
+
 
 func _ready() -> void:
 	var steamInitStatus := Steam.steamInitEx(APP_ID)
 	assert(steamInitStatus["status"] == OK, "Failed to initialize steam: "+steamInitStatus["verbal"])
 	Steam.initRelayNetworkAccess()
+	
 	Steam.lobby_created.connect(_on_lobby_created)
 	Steam.lobby_joined.connect(_on_lobby_joined)
+	
 	steam_id = Steam.current_steam_id
 
 
@@ -37,20 +41,25 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 
 @warning_ignore("shadowed_variable")
 func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
-	#if the lobby joined sucsessfully connect to it with a peer
 	assert(response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS, "Failed to join lobby")
 	
-	if Steam.getLobbyOwner(lobby_id) == steam_id:
-		return
+	#if we are not connecting from the server to ourselves create a new peer 
+	if !multiplayer.is_server():
+		self.lobby_id = lobby_id
+		
+		var peer := SteamMultiplayerPeer.new()
+		peer.server_relay = true
+		var err := peer.connect_to_lobby(lobby_id)
+		assert(!err, "Failed to join lobby: "+error_string(err))
+		
+		multiplayer.multiplayer_peer = peer
 	
-	self.lobby_id = lobby_id
-	
-	var peer := SteamMultiplayerPeer.new()
-	peer.server_relay = true
-	var err := peer.connect_to_lobby(lobby_id)
-	assert(!err, "Failed to join lobby: "+error_string(err))
-	
-	multiplayer.multiplayer_peer = peer
+	#connect our signals
+	multiplayer.connected_to_server.connect(_on_connected_to_server)
+	multiplayer.connection_failed.connect(_on_connection_failed)
+	multiplayer.peer_connected.connect(_on_peer_connected.bind(steam_id))
+	multiplayer.peer_disconnected.connect(_on_peer_disconnected.bind(steam_id))
+	multiplayer.server_disconnected.connect(_on_server_disconnected)
 
 
 func get_friend_lobbies() -> Dictionary[int, Array]:
@@ -80,3 +89,25 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 			result[friend_lobby_id] = [friend_steam_id]
 	
 	return result
+
+
+func _on_connected_to_server() -> void:
+	print(multiplayer.get_peers())
+
+
+func _on_connection_failed() -> void:
+	assert(false, "Failed to connect to server")
+
+
+@warning_ignore("shadowed_variable")
+func _on_peer_connected(id: int, steam_id: int) -> void:
+	peer_steam_ids[id] = steam_id
+	#print(peer_steam_ids)
+
+
+func _on_peer_disconnected(id: int, _steam_id: int) -> void:
+	peer_steam_ids.erase(id)
+
+
+func _on_server_disconnected() -> void:
+	assert(false, "Server disconnected")
