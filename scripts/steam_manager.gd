@@ -2,6 +2,7 @@ extends Node
 
 const APP_ID := 480
 var lobby_id := -1
+var steam_id: int
 
 
 func _ready() -> void:
@@ -10,7 +11,8 @@ func _ready() -> void:
 	Steam.initRelayNetworkAccess()
 	Steam.lobby_created.connect(_on_lobby_created)
 	Steam.lobby_joined.connect(_on_lobby_joined)
-	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
+	steam_id = Steam.current_steam_id
+
 
 
 func _process(_delta: float) -> void:
@@ -26,7 +28,8 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	
 	var peer := SteamMultiplayerPeer.new()
 	peer.server_relay = true
-	peer.host_with_lobby(lobby_id)
+	var err := peer.host_with_lobby(lobby_id)
+	assert(!err, "Failed to host lobby: "+error_string(err))
 	
 	multiplayer.multiplayer_peer = peer
 	
@@ -37,11 +40,15 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 	#if the lobby joined sucsessfully connect to it with a peer
 	assert(response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS, "Failed to join lobby")
 	
+	if Steam.getLobbyOwner(lobby_id) == steam_id:
+		return
+	
 	self.lobby_id = lobby_id
 	
 	var peer := SteamMultiplayerPeer.new()
 	peer.server_relay = true
-	peer.connect_to_lobby(lobby_id)
+	var err := peer.connect_to_lobby(lobby_id)
+	assert(!err, "Failed to join lobby: "+error_string(err))
 	
 	multiplayer.multiplayer_peer = peer
 
