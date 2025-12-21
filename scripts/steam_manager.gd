@@ -34,11 +34,14 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 			continue
 		
 		var friend_app_id: int = friend_game_info["id"]
-		var friend_lobby: int = friend_game_info["lobby"]
+		var friend_lobby_id: int = friend_game_info["lobby"]
 		
-		if friend_app_id != APP_ID or friend_lobby == 0:
+		if friend_app_id != APP_ID or friend_lobby_id == 0:
 			continue
 		
-		result[friend_app_id].append(friend_steam_id)
+		if result.has(friend_lobby_id):
+			result[friend_lobby_id].append(friend_steam_id)
+		else:
+			result[friend_lobby_id] = [friend_steam_id]
 	
 	return result

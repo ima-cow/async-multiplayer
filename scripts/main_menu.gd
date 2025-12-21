@@ -148,7 +148,7 @@ func _on_join_game_pressed() -> void:
 		for player_id: int in lobbies[lobby]:
 			lobby_button.text += " "+Steam.getPlayerNickname(player_id)
 		lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobbies.find_key(lobby)))
-		%JoinGame.add_child(lobby_button)
+		%LobbieList.add_child(lobby_button)
 
 
 func _on_lobby_button_pressed(lobby_id: int) -> void:
