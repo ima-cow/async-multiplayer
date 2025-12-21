@@ -116,16 +116,18 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 	
 	var save_file_size := FileAccess.get_size("user://saves/"+save_name+".dat")
 	assert(save_file_size != -1, "Failed to access save file")
-	if save_file_size == 0:
-		assert(save_file.store_var(game.data), "Failed to write defaults to save file")
-	else:
-		var data:Variant = save_file.get_var()
-		assert(data is Dictionary[String, Variant], "Save data is corrupted or missing")
-		game.data = data
-		
-		var diffs:Variant = save_file.get_var()
-		assert(diffs is Dictionary[String, Dictionary], "Save diffs are corrupted or missing")
-		game.diffs = diffs
+	#if save_file_size == 0:
+		#assert(save_file.store_var(game.data), "Failed to write defaults to save file")
+	#else:
+		#var data:Variant = save_file.get_var()
+		#assert(data is Dictionary[String, Variant], "Save data is corrupted or missing")
+		#game.data = data
+		#
+		#var diffs:Variant = save_file.get_var()
+		#assert(diffs is Dictionary[String, Dictionary], "Save diffs are corrupted or missing")
+		#game.diffs = diffs
+	
+	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
 
 
 func _on_save_delete_button_pressed(save_name:String) -> void:
@@ -143,16 +145,17 @@ func _on_join_game_pressed() -> void:
 	#for each lobby with friends in them create a button and set the text all of friends names in the lobby
 	var lobbies := SteamManager.get_friend_lobbies()
 	
-	for lobby in lobbies:
+	for lobby_id in lobbies:
 		var lobby_button := Button.new()
-		for player_id: int in lobbies[lobby]:
-			lobby_button.text += " "+Steam.getPlayerNickname(player_id)
-		lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobbies.find_key(lobby)))
+		print(lobbies[lobby_id])
+		for player_id: int in lobbies[lobby_id]:
+			lobby_button.text += " "+Steam.getFriendPersonaName(player_id)
+		lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobby_id))
 		%LobbieList.add_child(lobby_button)
 
 
 func _on_lobby_button_pressed(lobby_id: int) -> void:
-	pass
+	Steam.joinLobby(lobby_id)
 
 
 func _on_settings_pressed() -> void:

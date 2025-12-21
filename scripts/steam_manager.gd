@@ -1,21 +1,49 @@
 extends Node
 
 const APP_ID := 480
-#const STEAM_ID := Steam.getSteamID()
+var lobby_id := -1
 
 
 func _ready() -> void:
 	var steamInitStatus := Steam.steamInitEx(APP_ID)
 	assert(steamInitStatus["status"] == OK, "Failed to initialize steam: "+steamInitStatus["verbal"])
 	Steam.initRelayNetworkAccess()
-	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
 	Steam.lobby_created.connect(_on_lobby_created)
+	Steam.lobby_joined.connect(_on_lobby_joined)
+	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
 
-func _on_lobby_created(connect: int, lobby_id: int) -> void:
-	Steam.joinLobby(lobby_id)
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
+
+
+@warning_ignore("shadowed_variable", "shadowed_variable_base_class")
+func _on_lobby_created(connect: int, lobby_id: int) -> void:
+	#if the lobby was properly created create a peer and host on it 
+	assert(connect == Steam.Result.RESULT_OK, "Failed to create or connect to created lobby: "+str(connect))
+	
+	self.lobby_id = lobby_id
+	
+	var peer := SteamMultiplayerPeer.new()
+	peer.server_relay = true
+	peer.host_with_lobby(lobby_id)
+	
+	multiplayer.multiplayer_peer = peer
+	
+
+
+@warning_ignore("shadowed_variable")
+func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
+	#if the lobby joined sucsessfully connect to it with a peer
+	assert(response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS, "Failed to join lobby")
+	
+	self.lobby_id = lobby_id
+	
+	var peer := SteamMultiplayerPeer.new()
+	peer.server_relay = true
+	peer.connect_to_lobby(lobby_id)
+	
+	multiplayer.multiplayer_peer = peer
 
 
 func get_friend_lobbies() -> Dictionary[int, Array]:
