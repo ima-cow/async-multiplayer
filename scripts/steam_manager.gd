@@ -21,6 +21,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
+	#print(multiplayer.get_peers())
 
 
 @warning_ignore("shadowed_variable", "shadowed_variable_base_class")
@@ -37,14 +38,15 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	
 	multiplayer.multiplayer_peer = peer
 	
+	print("created lobby")
 
 
 @warning_ignore("shadowed_variable")
 func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
 	assert(response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS, "Failed to join lobby")
 	
-	#if we are not connecting from the server to ourselves create a new peer 
-	if !multiplayer.is_server():
+	#if we are not connecting to our own lobby to ourselves create a new peer 
+	if Steam.getLobbyOwner(lobby_id) != steam_id:
 		self.lobby_id = lobby_id
 		
 		var peer := SteamMultiplayerPeer.new()
@@ -53,13 +55,15 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 		assert(!err, "Failed to join lobby: "+error_string(err))
 		
 		multiplayer.multiplayer_peer = peer
-	
+		
 	#connect our signals
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.peer_connected.connect(_on_peer_connected.bind(steam_id))
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected.bind(steam_id))
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	
+	print("joined lobby")
 
 
 func get_friend_lobbies() -> Dictionary[int, Array]:
@@ -92,7 +96,8 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 
 
 func _on_connected_to_server() -> void:
-	print(multiplayer.get_peers())
+	#print(multiplayer.get_peers())
+	pass
 
 
 func _on_connection_failed() -> void:
@@ -102,7 +107,7 @@ func _on_connection_failed() -> void:
 @warning_ignore("shadowed_variable")
 func _on_peer_connected(id: int, steam_id: int) -> void:
 	peer_steam_ids[id] = steam_id
-	#print(peer_steam_ids)
+	print(id)
 
 
 func _on_peer_disconnected(id: int, _steam_id: int) -> void:

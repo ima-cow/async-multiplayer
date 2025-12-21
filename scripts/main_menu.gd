@@ -110,7 +110,7 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 	get_tree().root.add_child(game)
 	
 	#if save file is found loads the data, otherwise writes a file with defaults
-	var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE_READ)
+	#var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE_READ)
 	err = FileAccess.get_open_error() 
 	assert(!err, "Failed to access save file: "+error_string(err))
 	
