@@ -6,6 +6,7 @@ var steam_id: int
 
 var peer_steam_ids: Dictionary[int, int]
 
+
 func _ready() -> void:
 	var steamInitStatus := Steam.steamInitEx(APP_ID)
 	assert(steamInitStatus["status"] == OK, "Failed to initialize steam: "+steamInitStatus["verbal"])
@@ -15,7 +16,6 @@ func _ready() -> void:
 	Steam.lobby_joined.connect(_on_lobby_joined)
 	
 	steam_id = Steam.getSteamID()
-
 
 
 func _process(_delta: float) -> void:
@@ -115,6 +115,6 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 	return result
 
 
-@rpc() @warning_ignore("shadowed_variable")
+@rpc("any_peer", "call_local") @warning_ignore("shadowed_variable")
 func _add_peer_steam_id(steam_id: int):
 	peer_steam_ids[multiplayer.get_remote_sender_id()] = steam_id
