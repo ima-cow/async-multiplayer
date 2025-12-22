@@ -126,11 +126,13 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 		GameStateManager.state = state
 		
 		var diffs:Dictionary = save_file.get_var()
-		assert(diffs is Dictionary[String, Dictionary] or (diffs is Dictionary and diffs.is_empty()), "Save diffs are corrupted or missing")
+		assert(diffs is Dictionary[int, Dictionary] or (diffs is Dictionary and diffs.is_empty()), "Save diffs are corrupted or missing")
 		GameStateManager.diffs = diffs
 	
 	GameStateManager.save_name = save_name
 	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
+	#@warning_ignore("return_value_discarded")
+	#get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
 func _on_save_delete_button_pressed(save_name:String) -> void:
@@ -154,12 +156,14 @@ func _on_join_game_pressed() -> void:
 		var lobby_button := Button.new()
 		for player_id: int in lobbies[lobby_id]:
 			lobby_button.text += " "+Steam.getFriendPersonaName(player_id)
-		assert(lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobby_id)))
+		@warning_ignore("return_value_discarded")
+		lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobby_id))
 		%LobbieList.add_child(lobby_button)
 
 
 func _on_lobby_button_pressed(lobby_id: int) -> void:
 	Steam.joinLobby(lobby_id)
+	#assert(!get_tree().change_scene_to_file("res://scenes/game.tscn"))
 
 
 func _on_settings_pressed() -> void:

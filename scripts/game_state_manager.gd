@@ -10,7 +10,9 @@ var state: Dictionary[String, Variant] = {
 }
 
 #diffs for each player in the form [steam id, diffed game state]
-var diffs:Dictionary[int, Dictionary] = {}
+var diffs:Dictionary[int, Dictionary] = {
+	-1:state
+}
 
 
 func set_state_or_diffs(key:String, value:Variant) -> void:
@@ -25,6 +27,7 @@ func set_state_or_diffs(key:String, value:Variant) -> void:
 
 @rpc("any_peer", "call_local")
 func _set_state(key:String, value:Variant) -> void:
+	print("state of: ",key," was set to: ",value," by id: ", multiplayer.get_remote_sender_id())
 	state[key] = value
 
 

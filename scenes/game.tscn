@@ -4,3 +4,41 @@
 
 [node name="Game" type="Node"]
 script = ExtResource("1_uwrxv")
+
+[node name="Dungeon1" type="Button" parent="."]
+offset_left = 198.0
+offset_top = 287.0
+offset_right = 206.0
+offset_bottom = 295.0
+theme_override_font_sizes/font_size = 35
+text = "Dungeon 1
+"
+
+[node name="Dungeon2" type="Button" parent="."]
+offset_left = 501.0
+offset_top = 287.0
+offset_right = 593.0
+offset_bottom = 318.0
+theme_override_font_sizes/font_size = 35
+text = "Dungeon 2"
+
+[node name="Dungeon3" type="Button" parent="."]
+offset_left = 787.0
+offset_top = 284.0
+offset_right = 879.0
+offset_bottom = 315.0
+theme_override_font_sizes/font_size = 35
+text = "Dungeon 3"
+
+[node name="Save" type="Button" parent="."]
+offset_left = 527.0
+offset_top = 425.0
+offset_right = 571.0
+offset_bottom = 456.0
+theme_override_font_sizes/font_size = 35
+text = "Save"
+
+[connection signal="pressed" from="Dungeon1" to="." method="_on_dungeon_1_pressed"]
+[connection signal="pressed" from="Dungeon2" to="." method="_on_dungeon_2_pressed"]
+[connection signal="pressed" from="Dungeon3" to="." method="_on_dungeon_3_pressed"]
+[connection signal="pressed" from="Save" to="." method="_on_save_pressed"]
