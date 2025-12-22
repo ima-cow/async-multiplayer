@@ -20,7 +20,7 @@ func _ready() -> void:
 	err = DirAccess.get_open_error()
 	assert(!err, "Failed to access save folder: "+error_string(err))
 	
-	save_dir.list_dir_begin()
+	assert(!save_dir.list_dir_begin(), "Failed to open save directory")
 	var file_name := save_dir.get_next()
 	while file_name != "":
 		if !save_dir.current_is_dir():
@@ -55,7 +55,9 @@ func _ready() -> void:
 func _on_host_game_pressed() -> void: 
 	#show the host game menu
 	_close_menus()
+	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/VSeparator.visible = true
+	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/HostGame.visible = true
 
 	#display a button for every valid save
@@ -99,34 +101,35 @@ func _create_open_save_button(save_name: String) -> void:
 	save_container.add_child(open_save_button)
 	save_container.add_child(delete_open_save_button)
 
-	open_save_button.pressed.connect(_on_open_save_button_pressed.bind(save_name))
-	delete_open_save_button.pressed.connect(_on_save_delete_button_pressed.bind(save_name))
+	assert(!open_save_button.pressed.connect(_on_open_save_button_pressed.bind(save_name)))
+	assert(!delete_open_save_button.pressed.connect(_on_save_delete_button_pressed.bind(save_name)))
 
 
 func _on_open_save_button_pressed(save_name:String) -> void:
 	var err:Error
 	
-	var game:Node = load("res://scenes/game.tscn").instantiate()
-	get_tree().root.add_child(game)
-	
 	#if save file is found loads the data, otherwise writes a file with defaults
-	#var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE_READ)
-	err = FileAccess.get_open_error() 
-	assert(!err, "Failed to access save file: "+error_string(err))
+	if !FileAccess.file_exists("user://saves/"+save_name+".dat"):
+		var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE)
+		err = FileAccess.get_open_error() 
+		assert(!err, "Failed to access save file: "+error_string(err))
+		
+		assert(save_file.store_var(GameStateManager.state), "Failed to write defaults to save file")
+		assert(save_file.store_var(GameStateManager.diffs), "Failed to write defaults to save file")
+	else:
+		var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.READ)
+		err = FileAccess.get_open_error() 
+		assert(!err, "Failed to access save file: "+error_string(err))
+		
+		var state:Dictionary = save_file.get_var()
+		assert(state is Dictionary[String, Variant], "Save state is corrupted or missing")
+		GameStateManager.state = state
+		
+		var diffs:Dictionary = save_file.get_var()
+		assert(diffs is Dictionary[String, Dictionary] or (diffs is Dictionary and diffs.is_empty()), "Save diffs are corrupted or missing")
+		GameStateManager.diffs = diffs
 	
-	var save_file_size := FileAccess.get_size("user://saves/"+save_name+".dat")
-	assert(save_file_size != -1, "Failed to access save file")
-	#if save_file_size == 0:
-		#assert(save_file.store_var(game.data), "Failed to write defaults to save file")
-	#else:
-		#var data:Variant = save_file.get_var()
-		#assert(data is Dictionary[String, Variant], "Save data is corrupted or missing")
-		#game.data = data
-		#
-		#var diffs:Variant = save_file.get_var()
-		#assert(diffs is Dictionary[String, Dictionary], "Save diffs are corrupted or missing")
-		#game.diffs = diffs
-	
+	GameStateManager.save_name = save_name
 	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
 
 
@@ -139,7 +142,9 @@ func _on_save_delete_button_pressed(save_name:String) -> void:
 func _on_join_game_pressed() -> void:
 	#make joining menu visible
 	_close_menus()
+	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/VSeparator.visible = true
+	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/JoinGame.visible = true
 	
 	#for each lobby with friends in them create a button and set the text all of friends names in the lobby
@@ -149,7 +154,7 @@ func _on_join_game_pressed() -> void:
 		var lobby_button := Button.new()
 		for player_id: int in lobbies[lobby_id]:
 			lobby_button.text += " "+Steam.getFriendPersonaName(player_id)
-		lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobby_id))
+		assert(lobby_button.pressed.connect(_on_lobby_button_pressed.bind(lobby_id)))
 		%LobbieList.add_child(lobby_button)
 
 
@@ -181,4 +186,5 @@ func _save_settings() -> Error:
 func _close_menus() -> void:
 	#hide all menus except for the main one
 	for i in range(1, $CenterContainer/Main.get_child_count()):
+		@warning_ignore("unsafe_property_access")
 		$CenterContainer/Main.get_child(i).visible = false

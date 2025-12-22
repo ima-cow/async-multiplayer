@@ -17,9 +17,20 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-MultiplayerManager="*res://scripts/multiplayer_manager.gd"
 GameStateManager="*res://scripts/game_state_manager.gd"
 SteamManager="*res://scripts/steam_manager.gd"
+
+[debug]
+
+gdscript/warnings/unassigned_variable=2
+gdscript/warnings/unassigned_variable_op_assign=2
+gdscript/warnings/untyped_declaration=2
+gdscript/warnings/unsafe_property_access=1
+gdscript/warnings/unsafe_method_access=1
+gdscript/warnings/unsafe_cast=1
+gdscript/warnings/unsafe_call_argument=1
+gdscript/warnings/return_value_discarded=1
+gdscript/warnings/deprecated_keyword=2
 
 [rendering]
 
