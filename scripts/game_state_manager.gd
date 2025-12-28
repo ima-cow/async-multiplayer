@@ -35,6 +35,7 @@ func _set_state(key:String, value:Variant) -> void:
 func sync(state: Dictionary[String, Variant]) -> void:
 	#set all objects in state to the new state
 	for object:String in state:
+		print("state of: ",object," was set to: ",state[object]," by id: ", multiplayer.get_remote_sender_id())
 		self.state[object] = state[object]
 
 

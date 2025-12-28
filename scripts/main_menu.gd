@@ -168,7 +168,7 @@ func _on_join_game_pressed() -> void:
 
 func _on_lobby_button_pressed(lobby_id: int) -> void:
 	Steam.joinLobby(lobby_id)
-	#assert(!get_tree().change_scene_to_file("res://scenes/game.tscn"))
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
 func _on_settings_pressed() -> void:

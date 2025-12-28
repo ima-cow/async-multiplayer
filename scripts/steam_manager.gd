@@ -7,6 +7,8 @@ var steam_id: int
 #peer unique ids with thier corisponding steam ids [peer id, steam id]
 var peer_steam_ids: Dictionary[int, int]
 
+signal all_steam_ids_mapped
+
 
 func _ready() -> void:
 	var steamInitStatus := Steam.steamInitEx(APP_ID)
@@ -73,11 +75,14 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 func _on_connected_to_server() -> void:
 	_add_peer_steam_id.rpc(steam_id)
 	
+	await all_steam_ids_mapped
+	print(multiplayer.get_peers())
 	for target_peer_id in multiplayer.get_peers():
 		var target_steam_id := peer_steam_ids[target_peer_id]
 		if GameStateManager.diffs.has(target_steam_id):
 			var diff:Dictionary[String, Variant] = GameStateManager.diffs[target_steam_id]
 			GameStateManager.sync.rpc_id(target_peer_id, diff)
+			
 
 
 func _on_connection_failed() -> void:
@@ -138,3 +143,6 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 @rpc("any_peer", "call_local") @warning_ignore("shadowed_variable")
 func _add_peer_steam_id(steam_id: int) -> void:
 	peer_steam_ids[multiplayer.get_remote_sender_id()] = steam_id
+	
+	if len(peer_steam_ids) == len(multiplayer.get_peers())+1:
+		all_steam_ids_mapped.emit()
