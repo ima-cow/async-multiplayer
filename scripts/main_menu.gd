@@ -41,7 +41,8 @@ func _ready() -> void:
 		settings_file = FileAccess.open("user://settings.dat", FileAccess.WRITE)
 		err = FileAccess.get_open_error()
 		assert(!err, "Failed to load settings: "+error_string(err))
-		assert(settings_file.store_var(settings), "Failed to set default settings")
+		var saved := settings_file.store_var(settings)
+		assert(saved, "Failed to set default settings")
 	else:
 		settings_file = FileAccess.open("user://settings.dat", FileAccess.READ)
 		err = FileAccess.get_open_error()
@@ -101,8 +102,10 @@ func _create_open_save_button(save_name: String) -> void:
 	save_container.add_child(open_save_button)
 	save_container.add_child(delete_open_save_button)
 
-	assert(!open_save_button.pressed.connect(_on_open_save_button_pressed.bind(save_name)))
-	assert(!delete_open_save_button.pressed.connect(_on_save_delete_button_pressed.bind(save_name)))
+	@warning_ignore("return_value_discarded")
+	open_save_button.pressed.connect(_on_open_save_button_pressed.bind(save_name))
+	@warning_ignore("return_value_discarded")
+	delete_open_save_button.pressed.connect(_on_save_delete_button_pressed.bind(save_name))
 
 
 func _on_open_save_button_pressed(save_name:String) -> void:
@@ -114,8 +117,10 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 		err = FileAccess.get_open_error() 
 		assert(!err, "Failed to access save file: "+error_string(err))
 		
-		assert(save_file.store_var(GameStateManager.state), "Failed to write defaults to save file")
-		assert(save_file.store_var(GameStateManager.diffs), "Failed to write defaults to save file")
+		var saved := save_file.store_var(GameStateManager.state)
+		assert(saved, "Failed to write defaults to save file")
+		saved = save_file.store_var(GameStateManager.diffs)
+		assert(saved, "Failed to write defaults to save file")
 	else:
 		var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.READ)
 		err = FileAccess.get_open_error() 
@@ -171,7 +176,8 @@ func _on_settings_pressed() -> void:
 
 
 func _on_quit_pressed() -> void:
-	assert(!_save_settings(), "Failed to save settings")
+	var err :=_save_settings()
+	assert(!err, "Failed to save settings")
 	get_tree().quit()
 
 

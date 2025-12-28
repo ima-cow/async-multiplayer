@@ -5,7 +5,8 @@ func _ready() -> void:
 
 
 func _on_save_pressed() -> void:
-	assert(!GameStateManager.save(), "failed to save")
+	var err := GameStateManager.save()
+	assert(!err, "failed to save")
 
 
 func _on_dungeon_1_pressed() -> void:

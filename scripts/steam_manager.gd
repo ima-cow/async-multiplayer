@@ -18,16 +18,12 @@ func _ready() -> void:
 	@warning_ignore("return_value_discarded")
 	Steam.lobby_joined.connect(_on_lobby_joined)
 	
-	steam_id = Steam.getSteamID()
-	print(Steam.getSteamID())
-	
+	steam_id = Steam.getSteamID()	
 	await multiplayer.connection_failed
-	print("help")
 
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
-	#print(multiplayer.get_peers())
 
 
 @warning_ignore("shadowed_variable", "shadowed_variable_base_class")
@@ -59,25 +55,22 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 		var peer := SteamMultiplayerPeer.new()
 		peer.server_relay = true
 		var err := peer.connect_to_lobby(lobby_id)
-		peer.add_peer(76561198316435193)
 		assert(!err, "Failed to join lobby: "+error_string(err))
 		
 		multiplayer.multiplayer_peer = peer
 	
+	@warning_ignore_start("return_value_discarded")
 	multiplayer.connected_to_server.connect(_on_connected_to_server)
 	multiplayer.connection_failed.connect(_on_connection_failed)
 	multiplayer.peer_connected.connect(_on_peer_connected.bind(steam_id))
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected.bind(steam_id))
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	@warning_ignore_restore("return_value_discarded")
 	
-	print(Steam.getNumLobbyMembers(lobby_id))
-	print(multiplayer.get_peers())
 	print("joined lobby")
-	print(multiplayer.multiplayer_peer)
 
 
 func _on_connected_to_server() -> void:
-	print("wow")
 	_add_peer_steam_id.rpc(steam_id)
 	
 	for target_peer_id in multiplayer.get_peers():
@@ -93,7 +86,6 @@ func _on_connection_failed() -> void:
 
 @warning_ignore("shadowed_variable")
 func _on_peer_connected(id: int, steam_id: int) -> void:
-	print("test")
 	if multiplayer.is_server():
 		_add_peer_steam_id.rpc_id(id, self.steam_id)
 	
@@ -106,7 +98,8 @@ func _on_peer_connected(id: int, steam_id: int) -> void:
 	#GameStateManager.save()
 
 func _on_peer_disconnected(id: int, _steam_id: int) -> void:
-	assert(peer_steam_ids.erase(id))
+	@warning_ignore("return_value_discarded")
+	peer_steam_ids.erase(id)
 
 
 func _on_server_disconnected() -> void:
