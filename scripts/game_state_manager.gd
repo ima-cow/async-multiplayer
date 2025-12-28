@@ -34,6 +34,7 @@ func _set_state(key:String, value:Variant) -> void:
 @rpc("any_peer") @warning_ignore("shadowed_variable")
 func sync(state: Dictionary[String, Variant]) -> void:
 	#set all objects in state to the new state
+	print("wow")
 	for object:String in state:
 		print("state of: ",object," was set to: ",state[object]," by id: ", multiplayer.get_remote_sender_id())
 		self.state[object] = state[object]

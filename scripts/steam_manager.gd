@@ -76,7 +76,6 @@ func _on_connected_to_server() -> void:
 	_add_peer_steam_id.rpc(steam_id)
 	
 	await all_steam_ids_mapped
-	print(multiplayer.get_peers())
 	for target_peer_id in multiplayer.get_peers():
 		var target_steam_id := peer_steam_ids[target_peer_id]
 		if GameStateManager.diffs.has(target_steam_id):
@@ -146,3 +145,5 @@ func _add_peer_steam_id(steam_id: int) -> void:
 	
 	if len(peer_steam_ids) == len(multiplayer.get_peers())+1:
 		all_steam_ids_mapped.emit()
+		print(peer_steam_ids.find_key(multiplayer.get_unique_id()))
+		print(steam_id)
