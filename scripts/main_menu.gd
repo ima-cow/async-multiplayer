@@ -111,7 +111,7 @@ func _create_open_save_button(save_name: String) -> void:
 func _on_open_save_button_pressed(save_name:String) -> void:
 	var err:Error
 	
-	#if save file is found loads the data, otherwise writes a file with defaults
+	#if a save file does not exist write defaults
 	if !FileAccess.file_exists("user://saves/"+save_name+".dat"):
 		var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE)
 		err = FileAccess.get_open_error() 
@@ -121,6 +121,7 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 		assert(saved, "Failed to write defaults to save file")
 		saved = save_file.store_var(GameStateManager.diffs)
 		assert(saved, "Failed to write defaults to save file")
+	#otherwise load data
 	else:
 		var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.READ)
 		err = FileAccess.get_open_error() 
@@ -129,10 +130,12 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 		var state:Dictionary = save_file.get_var()
 		assert(state is Dictionary[String, Variant], "Save state is corrupted or missing")
 		GameStateManager.state = state
+		print("state: ",state)
 		
 		var diffs:Dictionary = save_file.get_var()
 		assert(diffs is Dictionary[int, Dictionary] or (diffs is Dictionary and diffs.is_empty()), "Save diffs are corrupted or missing")
 		GameStateManager.diffs = diffs
+		print("diffs: ",diffs)
 	
 	GameStateManager.save_name = save_name
 	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
