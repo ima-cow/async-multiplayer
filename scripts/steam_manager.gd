@@ -92,12 +92,18 @@ func _on_connection_failed() -> void:
 
 @warning_ignore("shadowed_variable")
 func _on_peer_connected(peer_id: int, steam_id: int) -> void:
-	
-	if multiplayer.is_server():
-		_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id], GameStateManager.save_name, GameStateManager.save_id)
+	if steam_id in GameStateManager.diffs:
+		if multiplayer.is_server():
+			_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id], GameStateManager.save_name, GameStateManager.save_id)
+		else:
+			_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id])
 	else:
-		_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id])
-	
+		GameStateManager.diffs[steam_id] = {}
+		if multiplayer.is_server():
+			_sync_handshake.rpc_id(peer_id, steam_id, {}, GameStateManager.save_name, GameStateManager.save_id)
+		else:
+			_sync_handshake.rpc_id(peer_id, steam_id)
+
 
 func _on_peer_disconnected(peer_id: int, _steam_id: int) -> void:
 	@warning_ignore("return_value_discarded")
