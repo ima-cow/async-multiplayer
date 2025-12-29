@@ -109,35 +109,19 @@ func _create_open_save_button(save_name: String) -> void:
 
 
 func _on_open_save_button_pressed(save_name:String) -> void:
+	GameStateManager.save_name = save_name
+	
 	var err:Error
 	
 	#if a save file does not exist write defaults
 	if !FileAccess.file_exists("user://saves/"+save_name+".dat"):
-		var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE)
-		err = FileAccess.get_open_error() 
-		assert(!err, "Failed to access save file: "+error_string(err))
-		
-		var saved := save_file.store_var(GameStateManager.state)
-		assert(saved, "Failed to write defaults to save file")
-		saved = save_file.store_var(GameStateManager.diffs)
-		assert(saved, "Failed to write defaults to save file")
+		err = GameStateManager.save_state()
+		assert(!err, "Failed to write save data: "+error_string(err))
 	#otherwise load data
 	else:
-		var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.READ)
-		err = FileAccess.get_open_error() 
-		assert(!err, "Failed to access save file: "+error_string(err))
-		
-		var state:Dictionary = save_file.get_var()
-		assert(state is Dictionary[String, Variant], "Save state is corrupted or missing")
-		GameStateManager.state = state
-		print("state: ",state)
-		
-		var diffs:Dictionary = save_file.get_var()
-		assert(diffs is Dictionary[int, Dictionary] or (diffs is Dictionary and diffs.is_empty()), "Save diffs are corrupted or missing")
-		GameStateManager.diffs = diffs
-		print("diffs: ",diffs)
+		err = GameStateManager.load_state()
+		assert(!err, "Failed to load save dataL "+error_string(err))
 	
-	GameStateManager.save_name = save_name
 	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
 	#@warning_ignore("return_value_discarded")
 	#get_tree().change_scene_to_file("res://scenes/game.tscn")

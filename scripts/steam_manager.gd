@@ -3,11 +3,14 @@ extends Node
 const APP_ID := 480
 var lobby_id := -1
 var steam_id: int
+const SERVER := 1
 
 #peer unique ids with thier corisponding steam ids [peer id, steam id]
 var peer_steam_ids: Dictionary[int, int]
 
-signal all_steam_ids_mapped
+var handshake_count := 0
+var server_handshake := false
+signal all_handshakes
 
 
 func _ready() -> void:
@@ -20,8 +23,7 @@ func _ready() -> void:
 	@warning_ignore("return_value_discarded")
 	Steam.lobby_joined.connect(_on_lobby_joined)
 	
-	steam_id = Steam.getSteamID()	
-	await multiplayer.connection_failed
+	steam_id = Steam.getSteamID()
 
 
 func _process(_delta: float) -> void:
@@ -73,15 +75,15 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 
 
 func _on_connected_to_server() -> void:
-	_add_peer_steam_id.rpc(steam_id)
+	await all_handshakes
 	
-	await all_steam_ids_mapped
-	for target_peer_id in multiplayer.get_peers():
-		var target_steam_id := peer_steam_ids[target_peer_id]
-		if GameStateManager.diffs.has(target_steam_id):
-			var diff:Dictionary[String, Variant] = GameStateManager.diffs[target_steam_id]
-			GameStateManager.sync.rpc_id(target_peer_id, diff)
-			
+	if FileAccess.file_exists("user://saves/"+GameStateManager.save_name+".dat"):
+		var err := GameStateManager.load_state()
+		assert(!err, "Failed to load game state")
+		
+		_sync_handshake.rpc(steam_id, GameStateManager.diffs[steam_id])
+	else:
+		_sync_handshake.rpc(steam_id)
 
 
 func _on_connection_failed() -> void:
@@ -89,21 +91,17 @@ func _on_connection_failed() -> void:
 
 
 @warning_ignore("shadowed_variable")
-func _on_peer_connected(id: int, steam_id: int) -> void:
+func _on_peer_connected(peer_id: int, steam_id: int) -> void:
+	
 	if multiplayer.is_server():
-		_add_peer_steam_id.rpc_id(id, self.steam_id)
-	
-	if GameStateManager.diffs.has(steam_id):
-		var diff:Dictionary[String, Variant] = GameStateManager.diffs[steam_id]
-		GameStateManager.sync.rpc_id(id, diff)
+		_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id], GameStateManager.save_name, GameStateManager.save_id)
 	else:
-		GameStateManager.diffs[steam_id] = {}
+		_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id])
 	
-	#GameStateManager.save()
 
-func _on_peer_disconnected(id: int, _steam_id: int) -> void:
+func _on_peer_disconnected(peer_id: int, _steam_id: int) -> void:
 	@warning_ignore("return_value_discarded")
-	peer_steam_ids.erase(id)
+	peer_steam_ids.erase(peer_id)
 
 
 func _on_server_disconnected() -> void:
@@ -111,6 +109,7 @@ func _on_server_disconnected() -> void:
 
 
 func get_friend_lobbies() -> Dictionary[int, Array]:
+	# in the form lobby id : array of friend steam ids
 	var result: Dictionary[int, Array]
 	
 	#get all normal steam friends
@@ -139,11 +138,17 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 	return result
 
 
-@rpc("any_peer", "call_local") @warning_ignore("shadowed_variable")
-func _add_peer_steam_id(steam_id: int) -> void:
+@rpc("any_peer") @warning_ignore("shadowed_variable")
+func _sync_handshake(steam_id: int, state: Dictionary[String, Variant] = {}, save_name: String = "", save_id: int = -1) -> void:
+	GameStateManager.sync(state)
+	
 	peer_steam_ids[multiplayer.get_remote_sender_id()] = steam_id
 	
-	if len(peer_steam_ids) == len(multiplayer.get_peers())+1:
-		all_steam_ids_mapped.emit()
-		print(peer_steam_ids.find_key(multiplayer.get_unique_id()))
-		print(steam_id)
+	if multiplayer.get_remote_sender_id() == SERVER:
+		GameStateManager.save_name = save_name
+		GameStateManager.save_id = save_id
+		server_handshake = true
+	
+	handshake_count += 1
+	if handshake_count == len(multiplayer.get_peers())+1:
+		all_handshakes.emit()
