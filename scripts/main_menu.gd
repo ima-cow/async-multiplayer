@@ -124,7 +124,7 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 	
 	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
 	#@warning_ignore("return_value_discarded")
-	#get_tree().change_scene_to_file("res://scenes/game.tscn")
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
 func _on_save_delete_button_pressed(save_name:String) -> void:
