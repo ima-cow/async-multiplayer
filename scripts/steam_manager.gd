@@ -44,7 +44,6 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	assert(!err, "Failed to host lobby: "+error_string(err))
 	
 	multiplayer.multiplayer_peer = peer
-	peer_steam_ids[multiplayer.get_unique_id()] = steam_id
 	
 	print("created lobby")
 
@@ -52,6 +51,8 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 @warning_ignore("shadowed_variable")
 func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
 	assert(response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS, "Failed to join lobby")
+	
+	peer_steam_ids[multiplayer.get_unique_id()] = steam_id
 	
 	#if we are not connecting to our own lobby to ourselves create a new peer 
 	if Steam.getLobbyOwner(lobby_id) != steam_id:
@@ -158,7 +159,7 @@ func _sync_handshake(steam_id: int, state: Dictionary = {}, save_name: String = 
 		server_handshake = true
 	
 	handshake_count += 1
-	if handshake_count == len(multiplayer.get_peers())+1:
+	if handshake_count == len(multiplayer.get_peers()):
 		all_handshakes.connect(_on_all_handshakes)
 		all_handshakes.emit()
 
