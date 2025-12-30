@@ -24,6 +24,7 @@ func _ready() -> void:
 	Steam.lobby_joined.connect(_on_lobby_joined)
 	
 	steam_id = Steam.getSteamID()
+	
 
 
 func _process(_delta: float) -> void:
@@ -145,8 +146,9 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 
 
 @rpc("any_peer") @warning_ignore("shadowed_variable")
-func _sync_handshake(steam_id: int, state: Dictionary[String, Variant] = {}, save_name: String = "", save_id: int = -1) -> void:
-	GameStateManager.sync(state)
+func _sync_handshake(steam_id: int, state: Dictionary = {}, save_name: String = "", save_id: int = -1) -> void:
+	if !state.is_empty():
+		GameStateManager.sync(state)
 	
 	peer_steam_ids[multiplayer.get_remote_sender_id()] = steam_id
 	
@@ -157,4 +159,8 @@ func _sync_handshake(steam_id: int, state: Dictionary[String, Variant] = {}, sav
 	
 	handshake_count += 1
 	if handshake_count == len(multiplayer.get_peers())+1:
+		all_handshakes.connect(_on_all_handshakes)
 		all_handshakes.emit()
+
+func _on_all_handshakes() -> void:
+	print("hands")

@@ -155,6 +155,7 @@ func _on_join_game_pressed() -> void:
 
 func _on_lobby_button_pressed(lobby_id: int) -> void:
 	Steam.joinLobby(lobby_id)
+	@warning_ignore("return_value_discarded")
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
@@ -170,7 +171,7 @@ func _on_quit_pressed() -> void:
 
 func _save_settings() -> Error:
 	var settings_file := FileAccess.open("user://settings.dat", FileAccess.WRITE)
-	var err := FileAccess.get_open_error() #this function can error
+	var err := FileAccess.get_open_error() 
 	if err:
 		return err
 
@@ -181,7 +182,6 @@ func _save_settings() -> Error:
 
 
 func _close_menus() -> void:
-	#hide all menus except for the main one
 	for i in range(1, $CenterContainer/Main.get_child_count()):
 		@warning_ignore("unsafe_property_access")
 		$CenterContainer/Main.get_child(i).visible = false

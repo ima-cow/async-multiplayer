@@ -20,11 +20,12 @@ func set_state_or_diffs(key:String, value:Variant) -> void:
 	#for every regesiterd steam id check if that player is in game, if they are call set state on them, otherwise set diffs for the value at that players id
 	state[key] = value
 	for steam_id:int in diffs:
-		if SteamManager.peer_steam_ids.values().has(steam_id):
+		print(SteamManager.peer_steam_ids)
+		if steam_id in SteamManager.peer_steam_ids.values():
 			var peer_id: int = SteamManager.peer_steam_ids.find_key(steam_id)
 			_set_state.rpc_id(peer_id, key, value)
 		else:
-			state.diffs[steam_id][key] = value 
+			diffs[steam_id][key] = value 
 
 
 @rpc("any_peer", "call_local")
@@ -34,7 +35,7 @@ func _set_state(key:String, value:Variant) -> void:
 
 
 @warning_ignore("shadowed_variable")
-func sync(state: Dictionary[String, Variant]) -> void:
+func sync(state: Dictionary) -> void:
 	for object:String in state:
 		print("state of: ",object," was set to: ",state[object]," by id: ", multiplayer.get_remote_sender_id())
 		self.state[object] = state[object]
