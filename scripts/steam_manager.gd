@@ -74,6 +74,8 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 	@warning_ignore_restore("return_value_discarded")
 	
 	print("joined lobby")
+	print("my peer id: ", multiplayer.get_unique_id())
+	print("my steam id: ", steam_id)
 
 
 func _on_connected_to_server() -> void:
@@ -85,6 +87,7 @@ func _on_connected_to_server() -> void:
 		
 		_sync_handshake.rpc(steam_id, GameStateManager.diffs[steam_id])
 	else:
+		GameStateManager.diffs[steam_id] = {}
 		_sync_handshake.rpc(steam_id)
 
 
