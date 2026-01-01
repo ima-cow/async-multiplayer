@@ -4,10 +4,10 @@ var save_name: String
 var save_id: int
 
 #game state in the form [object, value] where is object is the thing to be saved, eg status of dungeon or invantory
-var state: Dictionary[String, Variant] = {
-	"dungeon_1":false,
-	"dungeon_2":false,
-	"dungeon_3":false,
+var state: Dictionary[StringName, Variant] = {
+	&"dungeon_1":false,
+	&"dungeon_2":false,
+	&"dungeon_3":false,
 }
 
 #diffs for each player in the form [steam id, diffed game state]
@@ -17,11 +17,11 @@ var diffs:Dictionary[int, Dictionary] = {
 
 func set_state_or_diffs(key:String, value:Variant) -> void:
 	#for every regesiterd steam id check if that player is in game, if they are call set state on them, otherwise set diffs for the value at that players id
-	state[key] = value
+	_set_state(key, value)
 	for steam_id:int in diffs:
-		print(SteamManager.peer_steam_ids)
+		#print(SteamManager.peer_steam_ids)
 		if steam_id in SteamManager.peer_steam_ids.values():
-			print(diffs)
+			#print(diffs)
 			var peer_id: int = SteamManager.peer_steam_ids.find_key(steam_id)
 			_set_state.rpc_id(peer_id, key, value)
 		else:
