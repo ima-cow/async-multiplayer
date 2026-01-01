@@ -5,7 +5,7 @@ var lobby_id := -1
 var steam_id: int
 const SERVER := 1
 
-#peer unique ids with thier corisponding steam ids [peer id, steam id]
+#peer unique ids with thier corisponding steam ids [peer id : steam id]
 var peer_steam_ids: Dictionary[int, int]
 
 signal peer_steam_id_mapped

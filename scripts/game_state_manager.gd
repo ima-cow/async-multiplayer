@@ -66,5 +66,7 @@ func load_state() -> Error:
 	save_id = contents[1]
 	state = contents[2]
 	diffs = contents[3]
+	print("state: ",state)
+	print("diffs: ",diffs)
 	
 	return OK

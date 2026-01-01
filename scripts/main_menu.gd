@@ -123,7 +123,7 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 		assert(!err, "Failed to load save dataL "+error_string(err))
 	
 	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
-	#@warning_ignore("return_value_discarded")
+	@warning_ignore("return_value_discarded")
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
