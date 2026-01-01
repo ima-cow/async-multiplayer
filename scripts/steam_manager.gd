@@ -25,7 +25,6 @@ func _ready() -> void:
 	Steam.lobby_joined.connect(_on_lobby_joined)
 	
 	steam_id = Steam.getSteamID()
-	
 
 
 func _process(_delta: float) -> void:
@@ -74,6 +73,7 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 	
 	#map our own peer and steam id
 	peer_steam_ids[multiplayer.get_unique_id()] = steam_id
+	print(multiplayer.get_unique_id(), " : ",steam_id)
 	print("joined lobby")
 	print("my peer id: ", multiplayer.get_unique_id())
 	print("my steam id: ", steam_id)
@@ -111,6 +111,8 @@ func _on_peer_connected(peer_id: int) -> void:
 	@warning_ignore("shadowed_variable")
 	var steam_id := peer_steam_ids[peer_id]
 	
+	print("target peer id, ", peer_id)
+	print("target steam id, ", steam_id)
 	if steam_id in GameStateManager.diffs:
 		if multiplayer.is_server():
 			_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id], GameStateManager.save_name, GameStateManager.save_id)
@@ -166,6 +168,7 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 @rpc("any_peer") @warning_ignore("shadowed_variable")
 func _map_peer_steam_id(steam_id: int) -> void:
 	peer_steam_ids[multiplayer.get_remote_sender_id()] = steam_id
+	print(multiplayer.get_remote_sender_id(), " : ",steam_id)
 	peer_steam_id_mapped.emit()
 
 
@@ -175,6 +178,7 @@ func _sync_handshake(steam_id: int, state: Dictionary = {}, save_name: String = 
 		GameStateManager.sync(state)
 	
 	peer_steam_ids[multiplayer.get_remote_sender_id()] = steam_id
+	print(multiplayer.get_remote_sender_id(), " : ",steam_id)
 	
 	if multiplayer.get_remote_sender_id() == SERVER:
 		GameStateManager.save_name = save_name
