@@ -199,6 +199,6 @@ func _sync_handshake(steam_id: int, state: Dictionary = {}, save_name: String = 
 func _on_all_handshakes() -> void:
 	var err := GameStateManager.save_state()
 	assert(!err)
-	if !multiplayer.is_server():
+	if get_tree().current_scene.name != "game":
 		@warning_ignore("return_value_discarded")
 		get_tree().change_scene_to_file("res://scenes/game.tscn")
