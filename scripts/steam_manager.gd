@@ -68,7 +68,7 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 	@warning_ignore_start("return_value_discarded")
 	multiplayer.connected_to_server.connect(func() -> void: _sync_handshake_1.rpc(steam_id))
 	multiplayer.connection_failed.connect(func() -> void: assert(false, "Failed to connect to server"))
-	multiplayer.peer_connected.connect(func() -> void: pass)
+	multiplayer.peer_connected.connect(func(_peer_id: int) -> void: pass)
 	multiplayer.peer_disconnected.connect(func(peer_id: int) -> void: peer_steam_ids.erase(peer_id))
 	multiplayer.server_disconnected.connect(func() -> void: assert(false, "Server disconnected"))
 	@warning_ignore_restore("return_value_discarded")
@@ -158,6 +158,13 @@ func _sync_handshake_3(sender_steam_id: int, state: Dictionary = {}) -> void:
 	else:
 		GameStateManager.diffs[sender_steam_id] = {}
 		_sync_handshake_4.rpc_id(sender_id)
+		
+	
+	print("peer steam id: ", peer_steam_ids)
+	print("name: ",GameStateManager.save_name)
+	print("id: ",GameStateManager.save_id)
+	print("state: ",GameStateManager.state)
+	print("diffs: ",GameStateManager.diffs)
 
 
 #called on the peer just joining by the all other peers
@@ -171,3 +178,10 @@ func _sync_handshake_4(state: Dictionary = {}) -> void:
 	
 	@warning_ignore("return_value_discarded")
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	
+	
+	print("peer steam id: ", peer_steam_ids)
+	print("name: ",GameStateManager.save_name)
+	print("id: ",GameStateManager.save_id)
+	print("state: ",GameStateManager.state)
+	print("diffs: ",GameStateManager.diffs)
