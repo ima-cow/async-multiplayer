@@ -27,7 +27,6 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
-	#print(GameStateManager.diffs)
 
 
 @warning_ignore("shadowed_variable", "shadowed_variable_base_class")
@@ -81,8 +80,92 @@ func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response:
 	print("joined lobby")
 
 
+#called on all peers execpt the one just joining by the one just joining
+@rpc("any_peer")
+func _sync_handshake_1(sender_steam_id: int) -> void:
+	#map the senders steam id to peer steam ids then call the next handshake
+	var sender_id := multiplayer.get_remote_sender_id()
+	peer_steam_ids[sender_id] = sender_steam_id
+	
+	if multiplayer.is_server():
+		if sender_steam_id in GameStateManager.diffs:
+			_sync_handshake_2.rpc_id(sender_id, steam_id, GameStateManager.save_name, GameStateManager.save_id)
+	else:
+		_sync_handshake_2.rpc_id(sender_id, steam_id)
+
+
+#called on the peer just joining by the all other peers
+@rpc("any_peer")
+func _sync_handshake_2(sender_steam_id: int, save_name: String = "", save_id: int = -1, state: Dictionary = {}) -> void:
+	var sender_id := multiplayer.get_remote_sender_id()
+	peer_steam_ids[sender_id] = sender_steam_id
+	
+	if sender_id == SERVER:
+		GameStateManager.save_name = save_name
+		GameStateManager.save_id = save_id
+		
+		if !state.is_empty():
+			GameStateManager.sync(state, sender_steam_id)
+			_sync_handshake_3.rpc_id(sender_id, steam_id)
+			return
+	
+	handshake_count += 1
+	if handshake_count == len(multiplayer.get_peers()):
+		if FileAccess.file_exists("user://saves/"+GameStateManager.save_name+".dat"):
+			var err := GameStateManager.load_state()
+			assert(!err, "Failed to load game state")
+	for peer_id in multiplayer.get_peers():
+		var target_steam_id := peer_steam_ids[peer_id]
+		_sync_handshake_3.rpc_id(peer_id, steam_id, GameStateManager.diffs[target_steam_id])
+
+
+#called on all peers execpt the one just joining by the one just joining
+@rpc("any_peer")
+func _sync_handshake_3(sender_steam_id: int, state: Dictionary = {}) -> void:
+	var sender_id := multiplayer.get_remote_sender_id()
+	if !state.is_empty():
+		GameStateManager.sync(state, sender_id)
+	
+	var err := GameStateManager.save_state()
+	assert(!err)
+	
+	if sender_steam_id in GameStateManager.diffs:
+		_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[sender_steam_id])
+	else:
+		GameStateManager.diffs[sender_steam_id] = {}
+		_sync_handshake_4.rpc_id(sender_id)
+		
+	
+	print("peer steam id: ", peer_steam_ids)
+	print("name: ",GameStateManager.save_name)
+	print("id: ",GameStateManager.save_id)
+	print("state: ",GameStateManager.state)
+	print("diffs: ",GameStateManager.diffs)
+
+
+#called on the peer just joining by the all other peers
+@rpc("any_peer")
+func _sync_handshake_4(state: Dictionary = {}) -> void:
+	var sender_id := multiplayer.get_remote_sender_id()
+	var sender_steam_id := peer_steam_ids[sender_id]
+	if !state.is_empty():
+		GameStateManager.sync(state, sender_steam_id)
+	
+	var err := GameStateManager.save_state()
+	assert(!err)
+	
+	@warning_ignore("return_value_discarded")
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	
+	
+	print("peer steam id: ", peer_steam_ids)
+	print("name: ",GameStateManager.save_name)
+	print("id: ",GameStateManager.save_id)
+	print("state: ",GameStateManager.state)
+	print("diffs: ",GameStateManager.diffs)
+
+
 func get_friend_lobbies() -> Dictionary[int, Array]:
-	# in the form lobby id : array of friend steam ids
 	var result: Dictionary[int, Array]
 	
 	#get all normal steam friends
@@ -109,81 +192,3 @@ func get_friend_lobbies() -> Dictionary[int, Array]:
 			result[friend_lobby_id] = [friend_steam_id]
 	
 	return result
-
-
-#called on all peers execpt the one just joining by the one just joining
-@rpc("any_peer")
-func _sync_handshake_1(sender_steam_id: int) -> void:
-	var sender_id := multiplayer.get_remote_sender_id()
-	peer_steam_ids[sender_id] = sender_steam_id
-	
-	if multiplayer.is_server():
-		_sync_handshake_2.rpc_id(sender_id, steam_id, GameStateManager.save_name, GameStateManager.save_id)
-	else:
-		_sync_handshake_2.rpc_id(sender_id, steam_id)
-
-
-#called on the peer just joining by the all other peers
-@rpc("any_peer")
-func _sync_handshake_2(sender_steam_id: int, save_name: String = "", save_id: int = -1) -> void:
-	var sender_id := multiplayer.get_remote_sender_id()
-	peer_steam_ids[sender_id] = sender_steam_id
-	
-	if GameStateManager.save_name != "" and GameStateManager.save_id != -1:
-		GameStateManager.save_name = save_name
-		GameStateManager.save_id = save_id
-		name_and_id_set.emit()
-	else:
-		await name_and_id_set
-	
-	if FileAccess.file_exists("user://saves/"+GameStateManager.save_name+".dat"):
-		var err := GameStateManager.load_state()
-		assert(!err, "Failed to load game state")
-		_sync_handshake_3.rpc_id(sender_id, steam_id, GameStateManager.diffs[sender_steam_id])
-	else:
-		GameStateManager.diffs[sender_steam_id] = {}
-		_sync_handshake_3.rpc_id(sender_id, steam_id)
-
-
-#called on all peers execpt the one just joining by the one just joining
-@rpc("any_peer")
-func _sync_handshake_3(sender_steam_id: int, state: Dictionary = {}) -> void:
-	if !state.is_empty():
-		GameStateManager.sync(state)
-	
-	var err := GameStateManager.save_state()
-	assert(!err)
-	
-	var sender_id := multiplayer.get_remote_sender_id()
-	if sender_steam_id in GameStateManager.diffs:
-		_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[sender_steam_id])
-	else:
-		GameStateManager.diffs[sender_steam_id] = {}
-		_sync_handshake_4.rpc_id(sender_id)
-		
-	
-	print("peer steam id: ", peer_steam_ids)
-	print("name: ",GameStateManager.save_name)
-	print("id: ",GameStateManager.save_id)
-	print("state: ",GameStateManager.state)
-	print("diffs: ",GameStateManager.diffs)
-
-
-#called on the peer just joining by the all other peers
-@rpc("any_peer")
-func _sync_handshake_4(state: Dictionary = {}) -> void:
-	if !state.is_empty():
-		GameStateManager.sync(state)
-	
-	var err := GameStateManager.save_state()
-	assert(!err)
-	
-	@warning_ignore("return_value_discarded")
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
-	
-	
-	print("peer steam id: ", peer_steam_ids)
-	print("name: ",GameStateManager.save_name)
-	print("id: ",GameStateManager.save_id)
-	print("state: ",GameStateManager.state)
-	print("diffs: ",GameStateManager.diffs)

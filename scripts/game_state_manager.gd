@@ -35,11 +35,8 @@ func _set_state(key:StringName, value:Variant) -> void:
 
 
 @warning_ignore("shadowed_variable")
-func sync(state: Dictionary) -> void:
-	var sender_id := multiplayer.get_remote_sender_id()
-	for object:String in state:
-		print("synced state of: ",object," to: ",state[object]," by id: ", sender_id)
-		self.state[object] = state[object]
+func sync(state: Dictionary, sender_id: int) -> void:
+	self.state = state
 	_resolve_sync.rpc_id(sender_id)
 
 
