@@ -88,9 +88,9 @@ func _on_connected_to_server() -> void:
 		var err := GameStateManager.load_state()
 		assert(!err, "Failed to load game state")
 		
-		_sync_handshake.rpc(steam_id, GameStateManager.diffs[steam_id])
+		var steam_id: int = peer_steam_ids.find_key(self.steam_id)
+		_sync_handshake.rpc(self.steam_id, GameStateManager.diffs[steam_id])
 	else:
-		
 		@warning_ignore("shadowed_variable")
 		for steam_id:int in peer_steam_ids.values():
 			if steam_id == self.steam_id:
@@ -188,6 +188,7 @@ func _sync_handshake(steam_id: int, state: Dictionary = {}, save_name: String = 
 		@warning_ignore("return_value_discarded")
 		all_handshakes.connect(_on_all_handshakes)
 		all_handshakes.emit()
+
 
 func _on_all_handshakes() -> void:
 	var err := GameStateManager.save_state()
