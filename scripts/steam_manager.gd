@@ -90,6 +90,9 @@ func _sync_handshake_1(sender_steam_id: int) -> void:
 	if multiplayer.is_server():
 		if sender_steam_id in GameStateManager.diffs:
 			_sync_handshake_2.rpc_id(sender_id, steam_id, GameStateManager.save_name, GameStateManager.save_id)
+		else:
+			_sync_handshake_2.rpc_id(sender_id, steam_id, GameStateManager.save_name, GameStateManager.save_id, GameStateManager.state)
+
 	else:
 		_sync_handshake_2.rpc_id(sender_id, steam_id)
 
@@ -107,7 +110,7 @@ func _sync_handshake_2(sender_steam_id: int, save_name: String = "", save_id: in
 		if !state.is_empty():
 			GameStateManager.sync(state, sender_steam_id)
 			_sync_handshake_3.rpc_id(sender_id, steam_id)
-			return
+			return #without increameanting the handshake count so the next block never executes
 	
 	handshake_count += 1
 	if handshake_count == len(multiplayer.get_peers()):
