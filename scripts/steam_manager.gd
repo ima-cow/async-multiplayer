@@ -88,8 +88,11 @@ func _on_connected_to_server() -> void:
 		var err := GameStateManager.load_state()
 		assert(!err, "Failed to load game state")
 		
-		var steam_id: int = peer_steam_ids.find_key(self.steam_id)
-		_sync_handshake.rpc(self.steam_id, GameStateManager.diffs[steam_id])
+		@warning_ignore("shadowed_variable")
+		for peer_id in peer_steam_ids:
+			if peer_id == multiplayer.get_unique_id():
+				continue
+			_sync_handshake.rpc_id(peer_id, self.steam_id, GameStateManager.diffs[peer_steam_ids[peer_id]])
 	else:
 		@warning_ignore("shadowed_variable")
 		for steam_id:int in peer_steam_ids.values():
