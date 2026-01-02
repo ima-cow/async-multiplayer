@@ -27,6 +27,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	Steam.run_callbacks()
+	#print(GameStateManager.diffs)
 
 
 @warning_ignore("shadowed_variable", "shadowed_variable_base_class")
@@ -121,13 +122,14 @@ func _sync_handshake_1(sender_steam_id: int) -> void:
 	else:
 		_sync_handshake_2.rpc_id(sender_id, steam_id)
 
+
 #called on the peer just joining by the all other peers
 @rpc("any_peer")
 func _sync_handshake_2(sender_steam_id: int, save_name: String = "", save_id: int = -1) -> void:
 	var sender_id := multiplayer.get_remote_sender_id()
 	peer_steam_ids[sender_id] = sender_steam_id
 	
-	if save_name != "" and save_id != -1:
+	if GameStateManager.save_name != "" and GameStateManager.save_id != -1:
 		GameStateManager.save_name = save_name
 		GameStateManager.save_id = save_id
 		name_and_id_set.emit()
