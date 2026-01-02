@@ -115,6 +115,7 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 	
 	#if a save file does not exist write defaults
 	if !FileAccess.file_exists("user://saves/"+save_name+".dat"):
+		GameStateManager.save_id = Time.get_unix_time_from_system()*1000000 as int
 		err = GameStateManager.save_state()
 		assert(!err, "Failed to write save data: "+error_string(err))
 	#otherwise load data

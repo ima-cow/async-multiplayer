@@ -42,6 +42,8 @@ func sync(state: Dictionary) -> void:
 
 
 func save_state() -> Error:
+	print(save_name)
+	
 	var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE)
 	var err := FileAccess.get_open_error() 
 	if err:
@@ -62,10 +64,12 @@ func load_state() -> Error:
 	var contents: Array = save_file.get_var()
 	
 	assert(save_name == contents[0], "Mismatched save names")
-	assert(save_id == contents[1] or contents[1] == null, "Mismatched save ids")
+	if !multiplayer.is_server():
+		assert(save_id == contents[1], "Mismatched save ids")
 	save_id = contents[1]
 	state = contents[2]
 	diffs = contents[3]
+	print("save id: ",save_id)
 	print("state: ",state)
 	print("diffs: ",diffs)
 	
