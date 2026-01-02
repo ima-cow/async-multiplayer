@@ -1,7 +1,7 @@
 extends Node
 
 var save_name: String
-var save_id: int
+var save_id := -1
 
 #game state in the form [object, value] where is object is the thing to be saved, eg status of dungeon or invantory
 var state: Dictionary[StringName, Variant] = {
@@ -36,9 +36,17 @@ func _set_state(key:StringName, value:Variant) -> void:
 
 @warning_ignore("shadowed_variable")
 func sync(state: Dictionary) -> void:
+	var sender_id := multiplayer.get_remote_sender_id()
 	for object:String in state:
-		print("state of: ",object," was set to: ",state[object]," by id: ", multiplayer.get_remote_sender_id())
+		print("synced state of: ",object," to: ",state[object]," by id: ", sender_id)
 		self.state[object] = state[object]
+	_resolve_sync.rpc_id(sender_id)
+
+
+@rpc("any_peer")
+func _resolve_sync() -> void:
+	var steam_id := SteamManager.peer_steam_ids[multiplayer.get_remote_sender_id()]
+	diffs[steam_id] = {}
 
 
 func save_state() -> Error:
