@@ -48,6 +48,7 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	print("created lobby")
 
 
+
 @warning_ignore("shadowed_variable")
 func _on_lobby_joined(lobby_id: int, _permissions: int, _locked: bool, response: int) -> void:
 	assert(response == Steam.CHAT_ROOM_ENTER_RESPONSE_SUCCESS, "Failed to join lobby")
@@ -89,6 +90,7 @@ func _on_connected_to_server() -> void:
 		
 		_sync_handshake.rpc(steam_id, GameStateManager.diffs[steam_id])
 	else:
+		
 		@warning_ignore("shadowed_variable")
 		for steam_id:int in peer_steam_ids.values():
 			if steam_id == self.steam_id:
@@ -108,18 +110,20 @@ func _on_peer_connected(peer_id: int) -> void:
 	
 	await peer_steam_id_mapped
 	@warning_ignore("shadowed_variable")
-
+	var steam_id := peer_steam_ids[peer_id]
+	
 	if steam_id in GameStateManager.diffs:
 		if multiplayer.is_server():
-			_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id], GameStateManager.save_name, GameStateManager.save_id)
+			_sync_handshake.rpc_id(peer_id, self.steam_id, GameStateManager.diffs[steam_id], GameStateManager.save_name, GameStateManager.save_id)
 		else:
-			_sync_handshake.rpc_id(peer_id, steam_id, GameStateManager.diffs[steam_id])
+			_sync_handshake.rpc_id(peer_id, self.steam_id, GameStateManager.diffs[steam_id])
 	else:
+		
 		GameStateManager.diffs[steam_id] = {}
 		if multiplayer.is_server():
-			_sync_handshake.rpc_id(peer_id, steam_id, {}, GameStateManager.save_name, GameStateManager.save_id)
+			_sync_handshake.rpc_id(peer_id, self.steam_id, {}, GameStateManager.save_name, GameStateManager.save_id)
 		else:
-			_sync_handshake.rpc_id(peer_id, steam_id)
+			_sync_handshake.rpc_id(peer_id, self.steam_id)
 
 
 func _on_peer_disconnected(peer_id: int) -> void:
@@ -189,3 +193,4 @@ func _on_all_handshakes() -> void:
 	var err := GameStateManager.save_state()
 	assert(!err)
 	print(peer_steam_ids)
+	print(GameStateManager.diffs)
