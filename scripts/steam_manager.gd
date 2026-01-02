@@ -114,9 +114,13 @@ func _sync_handshake_2(sender_steam_id: int, save_name: String = "", save_id: in
 		if FileAccess.file_exists("user://saves/"+GameStateManager.save_name+".dat"):
 			var err := GameStateManager.load_state()
 			assert(!err, "Failed to load game state")
-	for peer_id in multiplayer.get_peers():
-		var target_steam_id := peer_steam_ids[peer_id]
-		_sync_handshake_3.rpc_id(peer_id, steam_id, GameStateManager.diffs[target_steam_id])
+		
+		for peer_id in multiplayer.get_peers():
+			var target_steam_id := peer_steam_ids[peer_id]
+			var diff := {}
+			if target_steam_id in GameStateManager.diffs:
+				diff = GameStateManager.diffs[target_steam_id]
+			_sync_handshake_3.rpc_id(peer_id, steam_id, diff)
 
 
 #called on all peers execpt the one just joining by the one just joining
