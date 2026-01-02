@@ -117,10 +117,11 @@ func _sync_handshake_2(sender_steam_id: int, save_name: String = "", save_id: in
 		
 		for peer_id in multiplayer.get_peers():
 			var target_steam_id := peer_steam_ids[peer_id]
-			var diff := {}
 			if target_steam_id in GameStateManager.diffs:
-				diff = GameStateManager.diffs[target_steam_id]
-			_sync_handshake_3.rpc_id(peer_id, steam_id, diff)
+				_sync_handshake_3.rpc_id(peer_id, steam_id, GameStateManager.diffs[target_steam_id])
+			else:
+				GameStateManager.diffs[target_steam_id] = {}
+				_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[target_steam_id])
 
 
 #called on all peers execpt the one just joining by the one just joining
@@ -137,7 +138,7 @@ func _sync_handshake_3(sender_steam_id: int, state: Dictionary = {}) -> void:
 		_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[sender_steam_id])
 	else:
 		GameStateManager.diffs[sender_steam_id] = {}
-		_sync_handshake_4.rpc_id(sender_id)
+		_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[sender_steam_id])
 		
 	
 	print("peer steam id: ", peer_steam_ids)
