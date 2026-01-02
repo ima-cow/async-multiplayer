@@ -124,8 +124,6 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 		assert(!err, "Failed to load save dataL "+error_string(err))
 	
 	Steam.createLobby(Steam.LOBBY_TYPE_FRIENDS_ONLY)
-	@warning_ignore("return_value_discarded")
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
 func _on_save_delete_button_pressed(save_name:String) -> void:
@@ -156,8 +154,6 @@ func _on_join_game_pressed() -> void:
 
 func _on_lobby_button_pressed(lobby_id: int) -> void:
 	Steam.joinLobby(lobby_id)
-	@warning_ignore("return_value_discarded")
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
 func _on_settings_pressed() -> void:

@@ -45,6 +45,9 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	
 	multiplayer.multiplayer_peer = peer
 	
+	@warning_ignore("return_value_discarded")
+	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	
 	print("created lobby")
 
 
