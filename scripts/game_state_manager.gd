@@ -19,9 +19,7 @@ func set_state_or_diffs(key:String, value:Variant) -> void:
 	#for every regesiterd steam id check if that player is in game, if they are call set state on them, otherwise set diffs for the value at that players id
 	_set_state(key, value)
 	for steam_id:int in diffs:
-		#print(diffs)
 		if steam_id in SteamManager.peer_steam_ids.values():
-			#print(diffs)
 			var peer_id: int = SteamManager.peer_steam_ids.find_key(steam_id)
 			_set_state.rpc_id(peer_id, key, value)
 		else:
@@ -42,8 +40,6 @@ func sync(state: Dictionary) -> void:
 
 
 func save_state() -> Error:
-	print(save_name)
-	
 	var save_file := FileAccess.open("user://saves/"+save_name+".dat", FileAccess.WRITE)
 	var err := FileAccess.get_open_error() 
 	if err:
