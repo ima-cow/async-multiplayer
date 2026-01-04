@@ -20,3 +20,9 @@ func _on_dungeon_2_pressed() -> void:
 
 func _on_dungeon_3_pressed() -> void:
 	GameStateManager.set_state_or_diffs(&"dungeon_3", true)
+
+
+func _on_save_and_quit_pressed() -> void:
+	var err := GameStateManager.save_state()
+	assert(!err, "failed to save")
+	get_tree().quit()

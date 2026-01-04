@@ -1,10 +1,10 @@
 extends Control
 
-var settings:Dictionary[String, Variant] = {
-	"username":""
+var _settings:Dictionary[StringName, Variant] = {
+	&"username":""
 }
 
-var save_names:Array[String]
+var _save_names:Array[String]
 
 
 func _ready() -> void:
@@ -15,7 +15,7 @@ func _ready() -> void:
 		err = DirAccess.make_dir_absolute("user://saves")
 		assert(!err, "Failed to create save directory: "+error_string(err))
 	
-	#load names of saves into save_names
+	#load names of saves into _save_names
 	var save_dir := DirAccess.open("user://saves")
 	err = DirAccess.get_open_error()
 	assert(!err, "Failed to access save folder: "+error_string(err))
@@ -27,7 +27,7 @@ func _ready() -> void:
 			if file_name.substr(file_name.length()-4) == ".dat":
 				print("Found save: " + file_name)
 				var file_name_value := file_name.substr(0, file_name.length()-4)
-				save_names.append(file_name_value)
+				_save_names.append(file_name_value)
 			else:
 				print("Unknown file type found in save directory: "+file_name)
 		else:
@@ -37,32 +37,34 @@ func _ready() -> void:
 	#if settings dont exist set the defaults, if they do read the file into settings
 	var settings_file: FileAccess
 	
-	if !FileAccess.file_exists("user://settings.dat"):
-		settings_file = FileAccess.open("user://settings.dat", FileAccess.WRITE)
+	if !FileAccess.file_exists("user://_settings.dat"):
+		settings_file = FileAccess.open("user://_settings.dat", FileAccess.WRITE)
 		err = FileAccess.get_open_error()
-		assert(!err, "Failed to load settings: "+error_string(err))
-		var saved := settings_file.store_var(settings)
-		assert(saved, "Failed to set default settings")
+		assert(!err, "Failed to load _settings: "+error_string(err))
+		var saved := settings_file.store_var(_settings)
+		assert(saved, "Failed to set default _settings")
 	else:
-		settings_file = FileAccess.open("user://settings.dat", FileAccess.READ)
+		settings_file = FileAccess.open("user://_settings.dat", FileAccess.READ)
 		err = FileAccess.get_open_error()
-		assert(!err, "Failed to load settings: "+error_string(err))
+		assert(!err, "Failed to load _settings: "+error_string(err))
 		
 		var data:Variant = settings_file.get_var()
-		assert(data is Dictionary[String, Variant], "Settings data is corrupted or missing")
-		settings = data
+		assert(data is Dictionary[StringName, Variant], "_settings data is corrupted or missing")
+		_settings = data
 
 
 func _on_host_game_pressed() -> void: 
 	#show the host game menu
 	_close_menus()
+	for i in range(1, %SaveList.get_child_count()):
+		%SaveList.get_child(i).queue_free()
 	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/VSeparator.visible = true
 	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/HostGame.visible = true
 
 	#display a button for every valid save
-	for save_name in save_names:
+	for save_name in _save_names:
 		_create_open_save_button(save_name)
 
 
@@ -79,7 +81,7 @@ func _on_create_game_pressed() -> void:
 		await name_field.text_submitted
 
 		#afer waiting for name to be submited add it to dict and create a button
-		save_names.push_front(name_field.text)
+		_save_names.push_front(name_field.text)
 
 		_create_open_save_button(name_field.text)
 		name_field.queue_free()
@@ -128,13 +130,18 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 
 func _on_save_delete_button_pressed(save_name:String) -> void:
 	#erase save from dict and delete the corrisponding button
-	save_names.erase(save_name)
+	var err := DirAccess.remove_absolute("user://saves/"+save_name+".dat")
+	assert(!err, "Failed to delete save")
+	
+	_save_names.erase(save_name)
 	get_node("%SaveList/"+save_name).queue_free()
 
 
 func _on_join_game_pressed() -> void:
 	#make joining menu visible
 	_close_menus()
+	for i in range(1, %LobbieList.get_child_count()):
+		%LobbieList.get_child(i).queue_free()
 	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/VSeparator.visible = true
 	@warning_ignore("unsafe_property_access")
@@ -162,17 +169,17 @@ func _on_settings_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	var err :=_save_settings()
-	assert(!err, "Failed to save settings")
+	assert(!err, "Failed to save _settings")
 	get_tree().quit()
 
 
 func _save_settings() -> Error:
-	var settings_file := FileAccess.open("user://settings.dat", FileAccess.WRITE)
+	var settings_file := FileAccess.open("user://_settings.dat", FileAccess.WRITE)
 	var err := FileAccess.get_open_error() 
 	if err:
 		return err
 
-	if !settings_file.store_var(settings):
+	if !settings_file.store_var(_settings):
 		return ERR_FILE_CANT_WRITE
 
 	return OK

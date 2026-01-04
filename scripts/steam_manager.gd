@@ -9,7 +9,6 @@ const SERVER := 1
 var peer_steam_ids: Dictionary[int, int]
 
 var handshake_count := 0
-signal name_and_id_set
 
 
 func _ready() -> void:
@@ -144,20 +143,21 @@ func _sync_handshake_3(sender_steam_id: int, state: Dictionary = {}) -> void:
 		_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[sender_steam_id])
 		
 	
+#region print statments
 	print("peer steam id: ", peer_steam_ids)
 	print("name: ",GameStateManager.save_name)
 	print("id: ",GameStateManager.save_id)
 	print("state: ",GameStateManager.state)
 	print("diffs: ",GameStateManager.diffs)
+#endregion
 
 
 #called on the peer just joining by the all other peers
 @rpc("any_peer")
 func _sync_handshake_4(state: Dictionary = {}) -> void:
 	var sender_id := multiplayer.get_remote_sender_id()
-	var sender_steam_id := peer_steam_ids[sender_id]
 	if !state.is_empty():
-		GameStateManager.sync(state, sender_steam_id)
+		GameStateManager.sync(state, sender_id)
 	
 	var err := GameStateManager.save_state()
 	assert(!err)
@@ -166,11 +166,13 @@ func _sync_handshake_4(state: Dictionary = {}) -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 	
 	
+#region print statements
 	print("peer steam id: ", peer_steam_ids)
 	print("name: ",GameStateManager.save_name)
 	print("id: ",GameStateManager.save_id)
 	print("state: ",GameStateManager.state)
 	print("diffs: ",GameStateManager.diffs)
+#endregion
 
 
 func get_friend_lobbies() -> Dictionary[int, Array]:

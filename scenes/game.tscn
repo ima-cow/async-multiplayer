@@ -31,14 +31,23 @@ theme_override_font_sizes/font_size = 35
 text = "Dungeon 3"
 
 [node name="Save" type="Button" parent="."]
-offset_left = 527.0
-offset_top = 425.0
-offset_right = 571.0
-offset_bottom = 456.0
+offset_left = 348.0
+offset_top = 436.0
+offset_right = 434.0
+offset_bottom = 493.0
 theme_override_font_sizes/font_size = 35
 text = "Save"
+
+[node name="SaveAndQuit" type="Button" parent="."]
+offset_left = 605.0
+offset_top = 436.0
+offset_right = 691.0
+offset_bottom = 493.0
+theme_override_font_sizes/font_size = 35
+text = "Save and quit"
 
 [connection signal="pressed" from="Dungeon1" to="." method="_on_dungeon_1_pressed"]
 [connection signal="pressed" from="Dungeon2" to="." method="_on_dungeon_2_pressed"]
 [connection signal="pressed" from="Dungeon3" to="." method="_on_dungeon_3_pressed"]
 [connection signal="pressed" from="Save" to="." method="_on_save_pressed"]
+[connection signal="pressed" from="SaveAndQuit" to="." method="_on_save_and_quit_pressed"]
