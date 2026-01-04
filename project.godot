@@ -32,6 +32,11 @@ gdscript/warnings/unsafe_call_argument=1
 gdscript/warnings/return_value_discarded=1
 gdscript/warnings/deprecated_keyword=2
 
+[editor]
+
+version_control/plugin_name="GitPlugin"
+version_control/autoload_on_startup=true
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

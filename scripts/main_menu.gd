@@ -1,5 +1,7 @@
 extends Control
 
+var loading_screen := preload("res://scenes/main_menu.tscn")
+
 var _settings:Dictionary[StringName, Variant] = {
 	&"username":""
 }
@@ -112,6 +114,8 @@ func _create_open_save_button(save_name: String) -> void:
 
 func _on_open_save_button_pressed(save_name:String) -> void:
 	GameStateManager.save_name = save_name
+	@warning_ignore("return_value_discarded")
+	get_tree().change_scene_to_packed(loading_screen)
 	
 	var err:Error
 	
@@ -140,6 +144,11 @@ func _on_save_delete_button_pressed(save_name:String) -> void:
 func _on_join_game_pressed() -> void:
 	#make joining menu visible
 	_close_menus()
+	var tot := 0
+	for i in range(5):
+		tot += i
+	print(tot)
+	
 	for i in range(1, %LobbieList.get_child_count()):
 		%LobbieList.get_child(i).queue_free()
 	@warning_ignore("unsafe_property_access")
@@ -160,6 +169,8 @@ func _on_join_game_pressed() -> void:
 
 
 func _on_lobby_button_pressed(lobby_id: int) -> void:
+	@warning_ignore("return_value_discarded")
+	get_tree().change_scene_to_packed(loading_screen)
 	Steam.joinLobby(lobby_id)
 
 
