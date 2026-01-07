@@ -37,19 +37,19 @@ func _ready() -> void:
 	#if settings dont exist set the defaults, if they do read the file into settings
 	var settings_file: FileAccess
 	
-	if !FileAccess.file_exists("user://_settings.dat"):
-		settings_file = FileAccess.open("user://_settings.dat", FileAccess.WRITE)
+	if !FileAccess.file_exists("user://settings.dat"):
+		settings_file = FileAccess.open("user://settings.dat", FileAccess.WRITE)
 		err = FileAccess.get_open_error()
-		assert(!err, "Failed to load _settings: "+error_string(err))
+		assert(!err, "Failed to load settings: "+error_string(err))
 		var saved := settings_file.store_var(_settings)
-		assert(saved, "Failed to set default _settings")
+		assert(saved, "Failed to set default settings")
 	else:
 		settings_file = FileAccess.open("user://_settings.dat", FileAccess.READ)
 		err = FileAccess.get_open_error()
-		assert(!err, "Failed to load _settings: "+error_string(err))
+		assert(!err, "Failed to load settings: "+error_string(err))
 		
 		var data:Variant = settings_file.get_var()
-		assert(data is Dictionary[StringName, Variant], "_settings data is corrupted or missing")
+		assert(data is Dictionary[StringName, Variant], "settings data is corrupted or missing")
 		_settings = data
 
 
@@ -117,7 +117,7 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 	
 	#if a save file does not exist write defaults
 	if !FileAccess.file_exists("user://saves/"+save_name+".dat"):
-		GameStateManager.save_id = Time.get_unix_time_from_system()*1000000 as int
+		GameStateManager.save_id = rand_from_seed(Time.get_unix_time_from_system()*1000000 as int)[0]
 		err = GameStateManager.save_state()
 		assert(!err, "Failed to write save data: "+error_string(err))
 	#otherwise load data
@@ -169,12 +169,12 @@ func _on_settings_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	var err :=_save_settings()
-	assert(!err, "Failed to save _settings")
+	assert(!err, "Failed to save settings")
 	get_tree().quit()
 
 
 func _save_settings() -> Error:
-	var settings_file := FileAccess.open("user://_settings.dat", FileAccess.WRITE)
+	var settings_file := FileAccess.open("user://settings.dat", FileAccess.WRITE)
 	var err := FileAccess.get_open_error() 
 	if err:
 		return err
