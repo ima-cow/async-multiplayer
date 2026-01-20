@@ -1,4 +1,4 @@
-class_name Dungeon extends Resource
+class_name Dungeon extends RefCounted
 
 class Room extends RefCounted:
 	enum types {
@@ -134,6 +134,21 @@ func _init(seed: int, num_branches: int, branch_length: int, prev_room: Room, pr
 	self._branch_count = branch_count
 	self._depth_in_branch = depth_in_branch
 	self._prev_split = prev_split
+
+#var another_room := Room.new(Room.types.NORMAL, "room1")
+#var another_room2 := Room.new(Room.types.NORMAL, "room2")
+#var another_room3 := Room.new(Room.types.NORMAL, "room3")
+#var another_room4 := Room.new(Room.types.NORMAL, "room4")
+#
+#var test_connections: Dictionary[Room, Array] = {
+	#starting_room : [another_room],
+	#another_room : [another_room2, ending_room],
+	#another_room2 : [another_room3, another_room4],
+	#another_room4 : [],
+	#another_room3 : [],
+	#ending_room : [],
+#}
+
 
 
 

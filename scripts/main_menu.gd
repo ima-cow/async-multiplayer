@@ -20,9 +20,10 @@ func _ready() -> void:
 	#load names of saves into _save_names
 	var save_dir := DirAccess.open("user://saves")
 	err = DirAccess.get_open_error()
-	assert(!err, "Failed to access save folder: "+error_string(err))
+	assert(!err, "Failed to access save directory: "+error_string(err))
 	
-	assert(!save_dir.list_dir_begin(), "Failed to open save directory")
+	err = save_dir.list_dir_begin()
+	assert(!err, "Failed to initialize save directory: "+error_string(err))
 	var file_name := save_dir.get_next()
 	while file_name != "":
 		if !save_dir.current_is_dir():
