@@ -141,7 +141,7 @@ func _sync_handshake_3(sender_steam_id: int, state: Dictionary = {}) -> void:
 		_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[sender_steam_id])
 	else:
 		GameStateManager.diffs[sender_steam_id] = {}
-		_sync_handshake_4.rpc_id(sender_id, GameStateManager.diffs[sender_steam_id])
+		_sync_handshake_4.rpc_id(sender_id, {})
 		
 	
 #region print statments

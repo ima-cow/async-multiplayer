@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cnvtwtab5x3mc"]
+[gd_scene load_steps=0 format=3 uid="uid://cnvtwtab5x3mc"]
 
 [node name="LoadingScreen" type="Control"]
 layout_mode = 3

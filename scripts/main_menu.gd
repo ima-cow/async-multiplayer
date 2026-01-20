@@ -144,10 +144,6 @@ func _on_save_delete_button_pressed(save_name:String) -> void:
 func _on_join_game_pressed() -> void:
 	#make joining menu visible
 	_close_menus()
-	var tot := 0
-	for i in range(5):
-		tot += i
-	print(tot)
 	
 	for i in range(1, %LobbieList.get_child_count()):
 		%LobbieList.get_child(i).queue_free()
@@ -155,6 +151,7 @@ func _on_join_game_pressed() -> void:
 	$CenterContainer/Main/VSeparator.visible = true
 	@warning_ignore("unsafe_property_access")
 	$CenterContainer/Main/JoinGame.visible = true
+	
 	
 	#for each lobby with friends in them create a button and set the text all of friends names in the lobby
 	var lobbies := SteamManager.get_friend_lobbies()
@@ -179,7 +176,7 @@ func _on_settings_pressed() -> void:
 
 
 func _on_quit_pressed() -> void:
-	var err :=_save_settings()
+	var err := _save_settings()
 	assert(!err, "Failed to save settings")
 	get_tree().quit()
 
