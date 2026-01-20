@@ -20,9 +20,10 @@ func _ready() -> void:
 	#load names of saves into _save_names
 	var save_dir := DirAccess.open("user://saves")
 	err = DirAccess.get_open_error()
-	assert(!err, "Failed to access save folder: "+error_string(err))
+	assert(!err, "Failed to access save directory: "+error_string(err))
 	
-	assert(!save_dir.list_dir_begin(), "Failed to open save directory")
+	err = save_dir.list_dir_begin()
+	assert(!err, "Failed to initialize save directory: "+error_string(err))
 	var file_name := save_dir.get_next()
 	while file_name != "":
 		if !save_dir.current_is_dir():
@@ -121,7 +122,7 @@ func _on_open_save_button_pressed(save_name:String) -> void:
 	
 	#if a save file does not exist write defaults
 	if !FileAccess.file_exists("user://saves/"+save_name+".dat"):
-		GameStateManager.save_id = Time.get_unix_time_from_system()*1000000 as int
+		GameStateManager.save_id = rand_from_seed(Time.get_unix_time_from_system()*1000000 as int)[0]
 		err = GameStateManager.save_state()
 		assert(!err, "Failed to write save data: "+error_string(err))
 	#otherwise load data
@@ -144,10 +145,6 @@ func _on_save_delete_button_pressed(save_name:String) -> void:
 func _on_join_game_pressed() -> void:
 	#make joining menu visible
 	_close_menus()
-	var tot := 0
-	for i in range(5):
-		tot += i
-	print(tot)
 	
 	for i in range(1, %LobbieList.get_child_count()):
 		%LobbieList.get_child(i).queue_free()
