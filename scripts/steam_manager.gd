@@ -111,6 +111,7 @@ func _sync_handshake_2(sender_steam_id: int, save_name: String = "", save_id: in
 			_sync_handshake_3.rpc_id(sender_id, steam_id)
 			return #without increameanting the handshake count so the next block never executes
 	
+	#incremeant the handshake count and if all the handshakes are completed move on to next step of handshake
 	handshake_count += 1
 	if handshake_count == len(multiplayer.get_peers()):
 		if FileAccess.file_exists("user://saves/"+GameStateManager.save_name+".dat"):
