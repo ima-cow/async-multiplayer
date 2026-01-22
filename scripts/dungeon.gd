@@ -25,8 +25,16 @@ class Room extends RefCounted:
 		else:
 			id = hash(self)
 
+
+const _MAX_BRANCHES = 4
+const _MAX_BRANCH_LENGTH = 5
+
+const BRANCH_DECAY := 3.0 #higher values mean more branches end early
+const SPLIT_3_WAYS := 0.35
+
 @warning_ignore("shadowed_global_identifier")
 var seed: int
+var _rng := RandomNumberGenerator.new()
 var tot_branches: int
 var branch_length: int
 var _prev_room: Room = starting_room
@@ -80,9 +88,9 @@ func _extend(current_room: Room) -> Error:
 	return OK
 
 
-func _branch(num_branches: int) -> Array[Dungeon]:	
+func _branch(num_branches: int) -> Array[Dungeon]:
 	var result: Array[Dungeon]
-	
+	#print(_depth_in_branch)
 	_branch_count += 1
 	_depth_in_branch = 0
 	_prev_split = _prev_room
@@ -107,29 +115,55 @@ func _duplicate() -> Dungeon:
 	return result
 
 
+func _end_branch() -> Dungeon:
+	var err: Error
+	
+	if _branch_count == tot_branches:
+		if _main_branch:
+			err = _add_connection(_prev_room, ending_room)
+			assert(!err)
+			
+			return self
+		else:
+			err = _add_connection(_prev_room, Room.new(Room.types.NORMAL, "room"))
+			assert(!err)
+			
+			return self
+	else:
+		if _rng.randf() < SPLIT_3_WAYS:
+			var split_room := Room.new(Room.types.SPLIT_2, "split")
+			err = _extend(split_room)
+			assert(!err)
+			
+			var branches := _branch(2)
+			var branch_1 := branches[0]
+			var branch_2 := branches[1]
+			
+			return _merge_connections([generate(self), generate(branch_1), generate(branch_2)])
+		else:
+			var split_room := Room.new(Room.types.SPLIT_2, "split")
+			err = _extend(split_room)
+			assert(!err)
+			
+			var branch := _branch(1)[0]
+			
+			return _merge_connections([generate(self), generate(branch)])
+
+
 @warning_ignore("shadowed_global_identifier")
 static func generate(dungeon: Dungeon) -> Dungeon:
 	var err: Error
 	if dungeon._depth_in_branch == dungeon.branch_length:
-		if dungeon._branch_count == dungeon.tot_branches:
-			if dungeon._main_branch:
-				err = dungeon._add_connection(dungeon._prev_room, dungeon.ending_room)
-				assert(!err)
-				
-				return dungeon
-			else:
-				err = dungeon._add_connection(dungeon._prev_room, Room.new(Room.types.NORMAL, "room"))
-				assert(!err)
-				
-				return dungeon
+		return dungeon._end_branch()
+	elif dungeon._depth_in_branch >= 2:
+		var decay_chance := 1-pow(BRANCH_DECAY, -float(dungeon._depth_in_branch)/float(dungeon.branch_length))
+		if dungeon._rng.randf() < decay_chance:
+			return dungeon._end_branch()
 		else:
-			var split_room := Room.new(Room.types.SPLIT_2, "split")
-			err = dungeon._extend(split_room)
+			err = dungeon._extend(Room.new(Room.types.NORMAL, "room"))
 			assert(!err)
 			
-			var branch := dungeon._branch(1)[0]
-
-			return _merge_connections([generate(dungeon), generate(branch)])
+			return generate(dungeon)
 	else:
 		var room := Room.new(Room.types.NORMAL, "room")
 		err = dungeon._extend(room)
@@ -148,10 +182,21 @@ static func generate(dungeon: Dungeon) -> Dungeon:
 
 
 @warning_ignore("shadowed_variable", "shadowed_global_identifier")
-func _init(seed: int, tot_branches: int, branch_length: int, prev_room: Room = starting_room, main_branch: bool = true, branch_count: int = 0, depth_in_branch: int = 0, prev_split: Room = starting_room) -> void:
+func _init(seed: int, tot_branches: int = -1, branch_length: int = -1, prev_room: Room = starting_room, main_branch: bool = true, branch_count: int = 0, depth_in_branch: int = 0, prev_split: Room = starting_room) -> void:
 	self.seed = seed
-	self.tot_branches = tot_branches
-	self.branch_length = branch_length
+	_rng.seed = seed
+	
+	if tot_branches == -1:
+		self.tot_branches = _rng.randi_range(2, _MAX_BRANCHES)
+	else:
+		self.tot_branches = tot_branches
+	
+	if branch_length == -1:
+		self.branch_length = _rng.randi_range(3, _MAX_BRANCH_LENGTH)
+	else:
+		self.branch_length = branch_length
+		assert(branch_length >= 2, "branch is too short, must be 2 or greater")
+	
 	self._prev_room = prev_room
 	self._main_branch = main_branch
 	self._branch_count = branch_count
