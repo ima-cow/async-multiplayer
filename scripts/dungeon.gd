@@ -4,6 +4,7 @@ class Room extends RefCounted:
 	enum types {
 		START,
 		END,
+		BLANK,
 		NORMAL,
 		SPLIT_2,
 		SPLIT_3,
@@ -36,14 +37,28 @@ class Branch extends RefCounted:
 	
 	var id: int
 	var main_branch: bool
-	var length: int
+	var size: int
+	var depth: int
 	
-	var connections: Array[int]
+	var connections: Array[Branch]
+	
+	
+	func is_dead_end() -> bool:
+		return ending_room == null
+	
 	
 	@warning_ignore("shadowed_variable")
-	func _init(starting_room: Room, main_branch: bool = false) -> void:
-		self.starting_room = starting_room
-		rooms.append(starting_room)
+	func _init(size: int, depth: int = 0, main_branch: bool = false) -> void:
+		self.depth = depth
+		
+		self.size = size
+		var err := rooms.resize(size) as Error
+		assert(!err)
+		
+		rooms.fill(Room.new(Room.types.BLANK))
+		if depth == 0:
+			rooms[0] = Room.new(Room.types.START)
+			starting_room = rooms[0]
 		
 		self.main_branch = main_branch
 		if main_branch:
@@ -51,193 +66,73 @@ class Branch extends RefCounted:
 		else:
 			id = hash(self)
 
-
-const MAX_BRANCHES = 4
-const MAX_BRANCH_LENGTH = 5
+#var decay_chance := 1-pow(BRANCH_DECAY, -float(depth_in_branch)/float(dungeon.branch_length))
 
 const BRANCH_DECAY := 3.0 #higher values mean more branches end early
 const SPLIT_3_WAYS := 0.35
 
-var starting_room := Room.new(Room.types.START)
+var starting_branch: Branch
+var starting_room: Room
 var ending_room := Room.new(Room.types.END)
-var staring_branch := Branch.new(starting_room, true)
-var current_branch := staring_branch
-var branch_ids: Dictionary[int, Branch] = {
-	staring_branch.id : staring_branch,
-}
+#var branch_ids: Dictionary[int, Branch] = {
+	#staring_branch.id : staring_branch,
+#}
 
 @warning_ignore("shadowed_global_identifier")
 var seed: int
 var rng := RandomNumberGenerator.new()
 var tot_branches: int
-var branch_length: int
-var prev_room: Room = current_branch.rooms[-1]
+var max_branch_size: int
 
 
-#func _add_connection(from: Room, to: Room) -> Error:
-	#if from.id not in connections:
-		#connections[from.id] = []
-	#
-	#for room:Room in connections[from.id]:
-		#if to.id == room.id:
-			#return ERR_ALREADY_EXISTS
-	#@warning_ignore("return_value_discarded")
-	#connections[from.id].append(to)
-	#
-	#if to.id not in connections:
-		#connections[to.id] = []
-	#
-	#return OK
-
-func _merge_branches(dungeons: Array[Dungeon]) -> Dungeon:
-	assert(dungeons.size() != 0)
-	var final_dungeon := Dungeon.new(dungeons[0].seed, dungeons[0].tot_branches, dungeons[0].branch_length)
-	
-	for dungeon in dungeons:
-		assert(dungeon.seed == final_dungeon.seed)
-		assert(dungeon.tot_branches == final_dungeon.tot_branches)
-		assert(dungeon.branch_length == final_dungeon.branch_length)
-		print(dungeon.current_branch.rooms)
-		final_dungeon.current_branch.connections.append(dungeon.current_branch.id)
-		final_dungeon.branch_ids.merge(dungeon.branch_ids)
-	
-	return final_dungeon
-
-
-#func _extend(current_room: Room) -> Error:
-	#var err := _add_connection(_prev_room, current_room)
-	#print(connections)
-	#if err:
-		#return err
-	#
-	#_prev_room = current_room
-	#_depth_in_branch += 1
-	#
-	#return OK
-#
-#
-#func _branch(num_branches: int) -> Array[Dungeon]:
-	#var result: Array[Dungeon]
-	#_branch_count += 1
-	#_depth_in_branch = 0
-	#_prev_split = _prev_room
-	#
-	#for i in range(num_branches):
-		#var branch := _duplicate()
-		#
-		#branch._main_branch = false
-		#
-		#result.append(branch)
-	#
-	#return result
-
-
-func _duplicate() -> Dungeon:
-	var result := Dungeon.new(seed, tot_branches, branch_length)
-	
-	result.seed = seed
-	result.tot_branches = tot_branches
-	result.branch_length = branch_length
-	result.prev_room = prev_room
-	result.starting_room = starting_room
-	result.ending_room = ending_room
-	result.staring_branch = staring_branch
-	result.current_branch = current_branch
-	result.branch_ids = branch_ids
-	
-	return result
-
-
-func _end_branch() -> Dungeon:
-	
-	var num_branches := branch_ids.size()
-	if num_branches == tot_branches:
-		if current_branch.main_branch:
-			current_branch.rooms.append(ending_room)
-			current_branch.ending_room = ending_room
-			
-			return self
-		else:
-			current_branch.rooms.append(Room.new(Room.types.NORMAL))
-			
-			return self
-	else:
-		if rng.randf() < SPLIT_3_WAYS:
-			var split_room := Room.new(Room.types.SPLIT_3)
-			
-			current_branch.rooms.append(split_room)
-			#print(current_branch.rooms)
-			
-			var branch_1 := _duplicate()
-			branch_1.current_branch = Branch.new(prev_room)
-			branch_ids[branch_1.current_branch.id] = branch_1.current_branch
-			var branch_2 := _duplicate()
-			branch_1.current_branch = Branch.new(prev_room)
-			branch_ids[branch_2.current_branch.id] = branch_2.current_branch
-			
-			return _merge_branches([generate(self), generate(branch_1), generate(branch_2)])
-		else:
-			var split_room := Room.new(Room.types.SPLIT_2)
-			
-			current_branch.rooms.append(split_room)
-			#print(current_branch.rooms)
-			
-			var branch_1 := _duplicate()
-			branch_1.current_branch = Branch.new(prev_room)
-			
-			return _merge_branches([generate(self), generate(branch_1)])
-
-
-@warning_ignore("shadowed_global_identifier")
-static func generate(dungeon: Dungeon) -> Dungeon:
-	var depth_in_branch: int = dungeon.current_branch.rooms.size()
-	
-	if depth_in_branch == dungeon.branch_length:
-		return dungeon._end_branch()
-	elif depth_in_branch >= 2:
-		var decay_chance := 1-pow(BRANCH_DECAY, -float(depth_in_branch)/float(dungeon.branch_length))
-		if dungeon.rng.randf() < decay_chance:
-			return dungeon._end_branch()
-		else:
-			dungeon.current_branch.rooms.append(Room.new(Room.types.NORMAL))
-			#print(dungeon.current_branch.rooms)
-			
-			return generate(dungeon)
-	else:
-		dungeon.current_branch.rooms.append(Room.new(Room.types.NORMAL))
-		#print(dungeon.current_branch.rooms)
+func _generate_blank_connecctions(branch: Branch) -> Branch:
+	if branch.depth != tot_branches:
+		var next_depth := branch.depth+1
 		
-		return generate(dungeon)
+		#var become_main := rng.randf() < 0.5
+		
+		if rng.randf() < SPLIT_3_WAYS:
+			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			branch.connections.append(branch_1)
+			var branch_2 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			branch.connections.append(branch_2)
+			var branch_3 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			branch.connections.append(branch_3)
+		else:
+			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			branch.connections.append(branch_1)
+			var branch_2 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			branch.connections.append(branch_2)
+	
+	return branch
 
-
-#func _get_branches(room_id: int, prev_room_ids: Array[int] = [], branches: Array[Array] =  [[]]) -> Array[Array]:
-	#if room_id in prev_room_ids:
-		#branches.append(prev_room_ids)
-		#return branches
-	#else:
-		#prev_room_ids.append(room_id)
-		#for room in connections[room_id]:
 
 
 @warning_ignore("shadowed_variable", "shadowed_global_identifier")
-func _init(seed: int, tot_branches: int, branch_length: int) -> void:
+func _init(seed: int, tot_branches: int, max_branch_size: int) -> void:
+	assert(max_branch_size > 3)
+	
 	self.seed = seed
 	rng.seed = seed
 	self.tot_branches = tot_branches
-	self.branch_length = branch_length
+	self.max_branch_size = max_branch_size
+	
+	var branch := Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), true)
+	branch.rooms[0] = Room.new(Room.types.START)
+	
+	starting_branch = _generate_blank_connecctions(branch)
+	starting_room = starting_branch.starting_room
 
 
-#func _to_string(room_id: int = starting_room.id, tabs: String = "\t") -> String:
-	##print(starting_room)
-	##print(connections[starting_room])
-	#if connections[room_id].size() == 0:
-		#return str(room_id)
-	#elif connections[room_id].size() == 1:
-		#@warning_ignore("unsafe_call_argument")
-		#return str(room_id) + " -> " + _to_string(connections[room_id][0].id, tabs)
-	#else:
-		#var value := str(room_id)
-		#for i in connections[room_id].size():
-			#@warning_ignore("unsafe_call_argument")
-			#value += "\n"+tabs+str(room_id)+" -> "+_to_string(connections[room_id][i].id, tabs+"\t")
-		#return value
+func _to_string(branch: Branch = starting_branch, value: String = "") -> String:
+	print(branch.depth)
+	for i in range(branch.depth):
+		value += "\t"
+	
+	value += str(branch.rooms)+"\n"
+	if branch.depth == tot_branches:
+		return value
+	else:
+		for b in branch.connections:
+			value += _to_string(b, value)
+		return value
