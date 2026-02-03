@@ -28,6 +28,24 @@ class Room extends RefCounted:
 				id = -1
 			_:
 				id = hash(self)
+	
+	func _to_string() -> String:
+		match type:
+			types.START:
+				return "start:"+str(id)
+			types.END:
+				return "end:"+str(id)
+			types.BLANK:
+				return "blank:"+str(id)
+			types.NORMAL:
+				return "normal:"+str(id)
+			types.SPLIT_2:
+				return "split_2:"+str(id)
+			types.SPLIT_3:
+				return "split_3:"+str(id)
+			_:
+				assert(false, "not a valid room type")
+				return ""
 
 
 class Branch extends RefCounted:
@@ -92,14 +110,14 @@ func _generate_blank_connecctions(branch: Branch) -> Branch:
 		#var become_main := rng.randf() < 0.5
 		
 		if rng.randf() < SPLIT_3_WAYS:
-			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth, true))
 			branch.connections.append(branch_1)
 			var branch_2 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
 			branch.connections.append(branch_2)
 			var branch_3 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
 			branch.connections.append(branch_3)
 		else:
-			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth, true))
 			branch.connections.append(branch_1)
 			var branch_2 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
 			branch.connections.append(branch_2)
@@ -110,29 +128,28 @@ func _generate_blank_connecctions(branch: Branch) -> Branch:
 
 @warning_ignore("shadowed_variable", "shadowed_global_identifier")
 func _init(seed: int, tot_branches: int, max_branch_size: int) -> void:
-	assert(max_branch_size > 3)
+	assert(max_branch_size > 1)
 	
 	self.seed = seed
 	rng.seed = seed
 	self.tot_branches = tot_branches
 	self.max_branch_size = max_branch_size
 	
-	var branch := Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), true)
+	var branch := Branch.new(rng.randi_range(max_branch_size - 1, max_branch_size), 0, true)
 	branch.rooms[0] = Room.new(Room.types.START)
 	
 	starting_branch = _generate_blank_connecctions(branch)
 	starting_room = starting_branch.starting_room
 
 
-func _to_string(branch: Branch = starting_branch, value: String = "") -> String:
-	print(branch.depth)
-	for i in range(branch.depth):
-		value += "\t"
-	
-	value += str(branch.rooms)+"\n"
-	if branch.depth == tot_branches:
-		return value
-	else:
-		for b in branch.connections:
-			value += _to_string(b, value)
-		return value
+func _to_string(branch: Branch = starting_branch) -> String:
+	var value := ""
+	for b in branch.connections:
+		for i in range(branch.depth):
+			value += "\t"
+			#print("\t")
+			#pass
+		value += str(b.rooms)+"\n" + _to_string(b)
+		#print(str(starting_branch.rooms)+"\n")
+	#print(value)
+	return value
