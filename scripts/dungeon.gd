@@ -49,107 +49,168 @@ class Room extends RefCounted:
 
 
 class Branch extends RefCounted:
-	var starting_room: Room
-	var ending_room: Room = null
 	var rooms: Array[Room]
 	
 	var id: int
-	var main_branch: bool
+	var is_main: bool
 	var size: int
 	var depth: int
 	
 	var connections: Array[Branch]
 	
 	
-	func is_dead_end() -> bool:
-		return ending_room == null
+	func is_deadend() -> bool:
+		return is_main and connections.is_empty()
+	
+	
+	func get_size() -> Vector2i:
+		var tot := Vector2i.ZERO
+		
+		for room in rooms:
+			tot += room.rect.size
+		
+		return tot
 	
 	
 	@warning_ignore("shadowed_variable")
-	func _init(size: int, depth: int = 0, main_branch: bool = false) -> void:
+	func _init(starting_room: Room, size: int, depth: int = 0, is_main: bool = false) -> void:
 		self.depth = depth
 		
 		self.size = size
 		var err := rooms.resize(size) as Error
 		assert(!err)
 		
-		rooms.fill(Room.new(Room.types.BLANK))
+		for i in range(rooms.size()):
+			rooms[i] = Room.new(Room.types.BLANK)
+		rooms[0] = starting_room
+		
 		if depth == 0:
 			rooms[0] = Room.new(Room.types.START)
-			starting_room = rooms[0]
 		
-		self.main_branch = main_branch
-		if main_branch:
+		self.is_main = is_main
+		if is_main:
 			id = 0
 		else:
 			id = hash(self)
+	
+	
+	func _to_string() -> String:
+		var value := ""
+		for room in rooms:
+			value += str(room) + " → "
+		
+		value = value.substr(0, value.length()-3)
+		
+		if not is_deadend():
+			match rooms[-1].type:
+				Room.types.SPLIT_3:
+					value += " ⇶ "
+				Room.types.SPLIT_2:
+					value += " ⇉ "
+				_:
+					value += " → "
+			
+			value += "↺"
+		
+		return value
 
 #var decay_chance := 1-pow(BRANCH_DECAY, -float(depth_in_branch)/float(dungeon.branch_length))
+#const BRANCH_DECAY := 3.0 #higher values mean more branches end early
 
-const BRANCH_DECAY := 3.0 #higher values mean more branches end early
-const SPLIT_3_WAYS := 0.35
+const SPLIT_3_WAYS := 0.3
+
+const MAX_BRANCH_DIFFERENCE := 3
 
 var starting_branch: Branch
-var starting_room: Room
-var ending_room := Room.new(Room.types.END)
-#var branch_ids: Dictionary[int, Branch] = {
-	#staring_branch.id : staring_branch,
-#}
 
 @warning_ignore("shadowed_global_identifier")
 var seed: int
 var rng := RandomNumberGenerator.new()
-var tot_branches: int
+var max_depth: int
 var max_branch_size: int
 
 
 func _generate_blank_connecctions(branch: Branch) -> Branch:
-	if branch.depth != tot_branches:
+	if branch.depth != max_depth:
+		var ending_room := branch.rooms[-1]
 		var next_depth := branch.depth+1
 		
-		#var become_main := rng.randf() < 0.5
 		
 		if rng.randf() < SPLIT_3_WAYS:
-			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth, true))
+			var split := Room.new(Room.types.SPLIT_3)
+			branch.rooms[-1] = split
+			
+			var next_main := rng.randf()
+			
+			var branch_1 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.3333333333 and branch.is_main))
+			branch_1.rooms[0] = split
 			branch.connections.append(branch_1)
-			var branch_2 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			var branch_2 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.3333333333 and next_main < 0.666666666 and branch.is_main))
+			branch_2.rooms[0] = split
 			branch.connections.append(branch_2)
-			var branch_3 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			var branch_3 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.6666666666 and branch.is_main))
+			branch_3.rooms[0] = split
 			branch.connections.append(branch_3)
 		else:
-			var branch_1 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth, true))
+			var next_main := rng.randf()
+			
+			var split := Room.new(Room.types.SPLIT_2)
+			branch.rooms[-1] = split
+			
+			var branch_1 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.5 and branch.is_main))
+			branch_1.rooms[0] = split
 			branch.connections.append(branch_1)
-			var branch_2 := _generate_blank_connecctions(Branch.new(rng.randi_range(max_branch_size - 3, max_branch_size), next_depth))
+			var branch_2 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.5 and branch.is_main))
+			branch_2.rooms[0] = split
 			branch.connections.append(branch_2)
-	
-	return branch
+		
+		return branch
+	else:
+		if branch.is_main:
+			branch.rooms[-1] = Room.new(Room.types.END)
+		return branch
 
+
+func _first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
+	var current_type := branch.rooms[room_index].type
+	
+	match current_type:
+		Room.types.BLANK:
+			branch.rooms[room_index].type = Room.types.NORMAL
+	
+	branch.rooms[room_index].rect = Rect2i(0, 0, rng.randi_range(10, 15), rng.randi_range(10, 15))
+	
+	if room_index == branch.size - 1:
+		for b in branch.connections:
+			_first_pass(b, 0)
+	else:
+		_first_pass(branch, room_index + 1)
 
 
 @warning_ignore("shadowed_variable", "shadowed_global_identifier")
-func _init(seed: int, tot_branches: int, max_branch_size: int) -> void:
-	assert(max_branch_size > 1)
+func _init(seed: int, max_depth: int, max_branch_size: int) -> void:
+	assert(max_branch_size - MAX_BRANCH_DIFFERENCE > 1, "your branches are too small")
 	
 	self.seed = seed
 	rng.seed = seed
-	self.tot_branches = tot_branches
+	self.max_depth = max_depth
 	self.max_branch_size = max_branch_size
 	
-	var branch := Branch.new(rng.randi_range(max_branch_size - 1, max_branch_size), 0, true)
-	branch.rooms[0] = Room.new(Room.types.START)
+	var starting_room := Room.new(Room.types.START)
+	var branch := Branch.new(starting_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), 0, true)
 	
 	starting_branch = _generate_blank_connecctions(branch)
-	starting_room = starting_branch.starting_room
 
 
 func _to_string(branch: Branch = starting_branch) -> String:
 	var value := ""
+	
+	if branch.depth == 0:
+		value = str(branch) + "\n"
+	
 	for b in branch.connections:
-		for i in range(branch.depth):
+		for i in range(branch.depth+1):
 			value += "\t"
-			#print("\t")
-			#pass
-		value += str(b.rooms)+"\n" + _to_string(b)
-		#print(str(starting_branch.rooms)+"\n")
-	#print(value)
+		value += str(b)+"\n" + _to_string(b)
+	
 	return value
