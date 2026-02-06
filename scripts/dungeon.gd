@@ -14,7 +14,7 @@ class Room extends RefCounted:
 	var id: int
 	var branch_id: int
 	
-	var rect: Rect2i
+	var bb: Rect2i #bounding box
 	
 	
 	@warning_ignore("shadowed_variable")
@@ -67,9 +67,22 @@ class Branch extends RefCounted:
 		var tot := Vector2i.ZERO
 		
 		for room in rooms:
-			tot += room.rect.size
+			tot += room.bb.size
 		
 		return tot
+	
+	
+	func get_connections_size() -> Vector2i:
+		var connections_size := Vector2i.ZERO
+		
+		for branch in connections:
+			var branch_size := branch.get_size()
+			
+			connections_size.x += branch_size.x
+			
+			connections_size.y = maxi(connections_size.y, branch_size.y)
+		
+		return connections_size
 	
 	
 	@warning_ignore("shadowed_variable")
@@ -88,7 +101,7 @@ class Branch extends RefCounted:
 			rooms[0] = Room.new(Room.types.START)
 		
 		self.is_main = is_main
-		if is_main:
+		if is_main and depth == 0:
 			id = 0
 		else:
 			id = hash(self)
@@ -131,10 +144,8 @@ var max_branch_size: int
 
 
 func _generate_blank_connecctions(branch: Branch) -> Branch:
-	if branch.depth != max_depth:
-		var ending_room := branch.rooms[-1]
+	if branch.depth != max_depth and branch.is_main:
 		var next_depth := branch.depth+1
-		
 		
 		if rng.randf() < SPLIT_3_WAYS:
 			var split := Room.new(Room.types.SPLIT_3)
@@ -142,25 +153,25 @@ func _generate_blank_connecctions(branch: Branch) -> Branch:
 			
 			var next_main := rng.randf()
 			
-			var branch_1 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.3333333333 and branch.is_main))
+			var branch_1 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.3333333333 and branch.is_main))
 			branch_1.rooms[0] = split
 			branch.connections.append(branch_1)
-			var branch_2 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.3333333333 and next_main < 0.666666666 and branch.is_main))
+			var branch_2 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.3333333333 and next_main < 0.666666666 and branch.is_main))
 			branch_2.rooms[0] = split
 			branch.connections.append(branch_2)
-			var branch_3 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.6666666666 and branch.is_main))
+			var branch_3 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.6666666666 and branch.is_main))
 			branch_3.rooms[0] = split
 			branch.connections.append(branch_3)
 		else:
-			var next_main := rng.randf()
-			
 			var split := Room.new(Room.types.SPLIT_2)
 			branch.rooms[-1] = split
 			
-			var branch_1 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.5 and branch.is_main))
+			var next_main := rng.randf()
+			
+			var branch_1 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.5 and branch.is_main))
 			branch_1.rooms[0] = split
 			branch.connections.append(branch_1)
-			var branch_2 := _generate_blank_connecctions(Branch.new(ending_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.5 and branch.is_main))
+			var branch_2 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.5 and branch.is_main))
 			branch_2.rooms[0] = split
 			branch.connections.append(branch_2)
 		
@@ -171,20 +182,55 @@ func _generate_blank_connecctions(branch: Branch) -> Branch:
 		return branch
 
 
-func _first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
+func first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
 	var current_type := branch.rooms[room_index].type
 	
 	match current_type:
 		Room.types.BLANK:
 			branch.rooms[room_index].type = Room.types.NORMAL
 	
-	branch.rooms[room_index].rect = Rect2i(0, 0, rng.randi_range(10, 15), rng.randi_range(10, 15))
+	@warning_ignore("narrowing_conversion")
+	branch.rooms[room_index].bb = Rect2i(INF, INF, rng.randi_range(10, 15), rng.randi_range(10, 15))
 	
 	if room_index == branch.size - 1:
 		for b in branch.connections:
-			_first_pass(b, 0)
+			first_pass(b, 0)
 	else:
-		_first_pass(branch, room_index + 1)
+		first_pass(branch, room_index + 1)
+
+
+func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
+	var result: Array[Rect2i]
+	
+	if branch.depth == 0:
+		var width := 0
+		var height := 0
+		
+		for room in branch.rooms:
+			var size := room.bb.size
+			
+			width = maxi(size.x, width)
+			height += size.y
+		
+		var start_bb := Rect2i(0, 0, width, height)
+		
+		var buffer := branch.size
+		start_bb = start_bb.grow_individual(0, buffer, buffer, 0)
+		
+		result.append(start_bb)
+		
+		var last_room_type := branch.rooms[-1].type
+		match last_room_type:
+			Room.types.SPLIT_2:
+				pass
+			Room.types.SPLIT_3:
+				pass
+			_:
+				assert(false, "last room on starting branch is not a split")
+	
+	
+	
+	return result
 
 
 @warning_ignore("shadowed_variable", "shadowed_global_identifier")

@@ -2,10 +2,11 @@ extends Node
 
 
 func _ready() -> void:
-	var dungeon := Dungeon.new(randi(), 2, 5)
-	dungeon._first_pass()
+	print(Rect2i(Vector2i.ZERO, Vector2(5, 5)).end)
+	var dungeon := Dungeon.new(randi(), 10, 5)
+	dungeon.first_pass()
+	#print(dungeon.starting_branch.connections[0].id)
 	#dungeon._to_string()
-	print(dungeon)
 	#print(dungeon.starting_branch.connections[0].depth)
 	
 	#print(dungeon.starting_branch.connections[0]," ", dungeon.starting_branch.connections[0].depth)
