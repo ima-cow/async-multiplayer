@@ -53,11 +53,12 @@ class Branch extends RefCounted:
 	
 	var id: int
 	var is_main: bool
-	var size: int
+	var length: int
 	var depth: int
 	
 	var connections: Array[Branch]
 	
+	var bb: Rect2i
 	
 	func is_deadend() -> bool:
 		return is_main and connections.is_empty()
@@ -69,6 +70,7 @@ class Branch extends RefCounted:
 		for room in rooms:
 			tot += room.bb.size
 		
+		assert(tot.abs() == tot)
 		return tot
 	
 	
@@ -86,11 +88,11 @@ class Branch extends RefCounted:
 	
 	
 	@warning_ignore("shadowed_variable")
-	func _init(starting_room: Room, size: int, depth: int = 0, is_main: bool = false) -> void:
+	func _init(starting_room: Room, length: int, depth: int = 0, is_main: bool = false) -> void:
 		self.depth = depth
 		
-		self.size = size
-		var err := rooms.resize(size) as Error
+		self.length = length
+		var err := rooms.resize(length) as Error
 		assert(!err)
 		
 		for i in range(rooms.size()):
@@ -130,7 +132,7 @@ class Branch extends RefCounted:
 #var decay_chance := 1-pow(BRANCH_DECAY, -float(depth_in_branch)/float(dungeon.branch_length))
 #const BRANCH_DECAY := 3.0 #higher values mean more branches end early
 
-const SPLIT_3_WAYS := 0.3
+const SPLIT_3_WAYS := 0.35
 
 const MAX_BRANCH_DIFFERENCE := 3
 
@@ -190,9 +192,9 @@ func first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
 			branch.rooms[room_index].type = Room.types.NORMAL
 	
 	@warning_ignore("narrowing_conversion")
-	branch.rooms[room_index].bb = Rect2i(INF, INF, rng.randi_range(10, 15), rng.randi_range(10, 15))
+	branch.rooms[room_index].bb = Rect2i(INF, INF, rng.randi_range(10, 12), rng.randi_range(10, 12))
 	
-	if room_index == branch.size - 1:
+	if room_index == branch.length - 1:
 		for b in branch.connections:
 			first_pass(b, 0)
 	else:
@@ -203,10 +205,11 @@ func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
 	var result: Array[Rect2i]
 	
 	if branch.depth == 0:
+		assert(branch == starting_branch)
 		var width := 0
 		var height := 0
 		
-		for room in branch.rooms:
+		for room in starting_branch.rooms:
 			var size := room.bb.size
 			
 			width = maxi(size.x, width)
@@ -214,19 +217,59 @@ func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
 		
 		var start_bb := Rect2i(0, 0, width, height)
 		
-		var buffer := branch.size
+		var buffer := starting_branch.length
 		start_bb = start_bb.grow_individual(0, buffer, buffer, 0)
 		
+		starting_branch.bb = start_bb
 		result.append(start_bb)
 		
-		var last_room_type := branch.rooms[-1].type
+		var last_room_type := starting_branch.rooms[-1].type
 		match last_room_type:
 			Room.types.SPLIT_2:
-				pass
+				assert(branch.connections.size() == 2)
+				var branch_1 := starting_branch.connections[0]
+				@warning_ignore("integer_division")
+				var branch_1_bb := Rect2i(Vector2i(start_bb.size.x/2, start_bb.end.y), branch_1.get_size())
+				branch_1.bb = branch_1_bb
+				result.append(branch_1_bb)
+				result.append_array(alloc_branches(branch_1))
+				
+				var branch_2 := starting_branch.connections[1]
+				var branch_2_size := branch_2.get_size()
+				@warning_ignore("integer_division")
+				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_2_size.x), start_bb.end.y), branch_2_size)
+				branch_2.bb = branch_2_bb
+				result.append(branch_2_bb)
+				result.append_array(alloc_branches(branch_2))
 			Room.types.SPLIT_3:
-				pass
+				assert(branch.connections.size() == 3)
+				var branch_1 := starting_branch.connections[0]
+				var branch_1_size := branch_1.get_size()
+				@warning_ignore("integer_division")
+				var branch_1_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2), start_bb.end.y), branch_1_size)
+				branch_1.bb = branch_1_bb
+				result.append(branch_1_bb)
+				result.append_array(alloc_branches(branch_1))
+				
+				var branch_2 := starting_branch.connections[1]
+				var branch_2_size := branch_2.get_size()
+				@warning_ignore("integer_division")
+				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2) - branch_2_size.x, start_bb.end.y), branch_2_size)
+				branch_2.bb = branch_2_bb
+				result.append(branch_2_bb)
+				result.append_array(alloc_branches(branch_2))
+				
+				var branch_3 := starting_branch.connections[2]
+				var branch_3_size := branch_3.get_size()
+				@warning_ignore("integer_division")
+				var branch_3_bb := Rect2i(Vector2i((start_bb.size.x/2) + (branch_1_size.x/2), start_bb.end.y), branch_3_size)
+				branch_3.bb = branch_3_bb
+				result.append(branch_3_bb)
+				result.append_array(alloc_branches(branch_3))
 			_:
 				assert(false, "last room on starting branch is not a split")
+		
+		return result
 	
 	
 	
@@ -252,6 +295,7 @@ func _to_string(branch: Branch = starting_branch) -> String:
 	var value := ""
 	
 	if branch.depth == 0:
+		assert(branch == starting_branch)
 		value = str(branch) + "\n"
 	
 	for b in branch.connections:
