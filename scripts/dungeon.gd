@@ -216,9 +216,7 @@ func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
 			height += size.y
 		
 		var start_bb := Rect2i(0, 0, width, height)
-		
-		var buffer := starting_branch.length
-		start_bb = start_bb.grow_individual(0, buffer, buffer, 0)
+		start_bb = start_bb.grow_side(SIDE_BOTTOM, 10)
 		
 		starting_branch.bb = start_bb
 		result.append(start_bb)
@@ -230,42 +228,52 @@ func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
 				var branch_1 := starting_branch.connections[0]
 				@warning_ignore("integer_division")
 				var branch_1_bb := Rect2i(Vector2i(start_bb.size.x/2, start_bb.end.y), branch_1.get_size())
+				if branch_1.is_main:
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
+					result.append_array(alloc_branches(branch_1))
 				branch_1.bb = branch_1_bb
 				result.append(branch_1_bb)
-				result.append_array(alloc_branches(branch_1))
 				
 				var branch_2 := starting_branch.connections[1]
 				var branch_2_size := branch_2.get_size()
 				@warning_ignore("integer_division")
 				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_2_size.x), start_bb.end.y), branch_2_size)
+				if branch_2.is_main:
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
+					result.append_array(alloc_branches(branch_2))
 				branch_2.bb = branch_2_bb
 				result.append(branch_2_bb)
-				result.append_array(alloc_branches(branch_2))
 			Room.types.SPLIT_3:
 				assert(branch.connections.size() == 3)
 				var branch_1 := starting_branch.connections[0]
 				var branch_1_size := branch_1.get_size()
 				@warning_ignore("integer_division")
 				var branch_1_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2), start_bb.end.y), branch_1_size)
+				if branch_1.is_main:
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
+					result.append_array(alloc_branches(branch_1))
 				branch_1.bb = branch_1_bb
 				result.append(branch_1_bb)
-				result.append_array(alloc_branches(branch_1))
 				
 				var branch_2 := starting_branch.connections[1]
 				var branch_2_size := branch_2.get_size()
 				@warning_ignore("integer_division")
 				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2) - branch_2_size.x, start_bb.end.y), branch_2_size)
+				if branch_2.is_main:
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
+					result.append_array(alloc_branches(branch_2))
 				branch_2.bb = branch_2_bb
 				result.append(branch_2_bb)
-				result.append_array(alloc_branches(branch_2))
 				
 				var branch_3 := starting_branch.connections[2]
 				var branch_3_size := branch_3.get_size()
 				@warning_ignore("integer_division")
 				var branch_3_bb := Rect2i(Vector2i((start_bb.size.x/2) + (branch_1_size.x/2), start_bb.end.y), branch_3_size)
+				if branch_3.is_main:
+					branch_3_bb = branch_3_bb.grow_side(SIDE_BOTTOM, 10)
+					result.append_array(alloc_branches(branch_3))
 				branch_3.bb = branch_3_bb
 				result.append(branch_3_bb)
-				result.append_array(alloc_branches(branch_3))
 			_:
 				assert(false, "last room on starting branch is not a split")
 		

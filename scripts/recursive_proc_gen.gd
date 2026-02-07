@@ -2,9 +2,10 @@ extends Node2D
 
 
 func _ready() -> void:
-	var dungeon := Dungeon.new(randi(), 10, 5)
+	var dungeon := Dungeon.new(randi(), 5, 5)
 	dungeon.first_pass()
 	var branches := dungeon.alloc_branches()
+	print(dungeon)
 	print(branches)
 	@warning_ignore("return_value_discarded")
 	draw.connect(draw_rects.bind(branches))
