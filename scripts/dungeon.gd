@@ -49,14 +49,20 @@ class Room extends RefCounted:
 
 
 class Branch extends RefCounted:
+	enum locations {
+		LEFT,
+		RIGHT,
+		CENTER,
+	}
+	
 	var rooms: Array[Room]
+	var connections: Array[Branch]
 	
 	var id: int
 	var is_main: bool
 	var length: int
 	var depth: int
-	
-	var connections: Array[Branch]
+	var location: locations
 	
 	var bb: Rect2i
 	
@@ -192,7 +198,7 @@ func first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
 			branch.rooms[room_index].type = Room.types.NORMAL
 	
 	@warning_ignore("narrowing_conversion")
-	branch.rooms[room_index].bb = Rect2i(INF, INF, rng.randi_range(10, 12), rng.randi_range(10, 12))
+	branch.rooms[room_index].bb = Rect2i(Vector2i.MAX, Vector2i(rng.randi_range(10, 12), rng.randi_range(10, 12)))
 	
 	if room_index == branch.length - 1:
 		for b in branch.connections:
@@ -201,8 +207,16 @@ func first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
 		first_pass(branch, room_index + 1)
 
 
-func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
-	var result: Array[Rect2i]
+func place_branches(branch: Branch = starting_branch) -> Array[Branch]:
+	assert(branch.is_main)
+	
+	var alloc_branches := func(prev_branch: Branch) -> void:
+		pass
+	
+	const BUFFER_SPACE := 10
+	
+	#var result: Array[Rect2i]
+	var result: Array[Branch]
 	
 	if branch.depth == 0:
 		assert(branch == starting_branch)
@@ -219,7 +233,7 @@ func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
 		start_bb = start_bb.grow_side(SIDE_BOTTOM, 10)
 		
 		starting_branch.bb = start_bb
-		result.append(start_bb)
+		result.append(starting_branch)
 		
 		var last_room_type := starting_branch.rooms[-1].type
 		match last_room_type:
@@ -229,20 +243,20 @@ func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
 				@warning_ignore("integer_division")
 				var branch_1_bb := Rect2i(Vector2i(start_bb.size.x/2, start_bb.end.y), branch_1.get_size())
 				if branch_1.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
-					result.append_array(alloc_branches(branch_1))
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
+					result.append_array(place_branches(branch_1))
 				branch_1.bb = branch_1_bb
-				result.append(branch_1_bb)
+				result.append(branch_1)
 				
 				var branch_2 := starting_branch.connections[1]
 				var branch_2_size := branch_2.get_size()
 				@warning_ignore("integer_division")
 				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_2_size.x), start_bb.end.y), branch_2_size)
 				if branch_2.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
-					result.append_array(alloc_branches(branch_2))
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
+					result.append_array(place_branches(branch_2))
 				branch_2.bb = branch_2_bb
-				result.append(branch_2_bb)
+				result.append(branch_2)
 			Room.types.SPLIT_3:
 				assert(branch.connections.size() == 3)
 				var branch_1 := starting_branch.connections[0]
@@ -250,36 +264,68 @@ func alloc_branches(branch: Branch = starting_branch) -> Array[Rect2i]:
 				@warning_ignore("integer_division")
 				var branch_1_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2), start_bb.end.y), branch_1_size)
 				if branch_1.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
-					result.append_array(alloc_branches(branch_1))
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
+					result.append_array(place_branches(branch_1))
 				branch_1.bb = branch_1_bb
-				result.append(branch_1_bb)
+				result.append(branch_1)
 				
 				var branch_2 := starting_branch.connections[1]
 				var branch_2_size := branch_2.get_size()
 				@warning_ignore("integer_division")
 				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2) - branch_2_size.x, start_bb.end.y), branch_2_size)
 				if branch_2.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, 10)
-					result.append_array(alloc_branches(branch_2))
+					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
+					result.append_array(place_branches(branch_2))
 				branch_2.bb = branch_2_bb
-				result.append(branch_2_bb)
+				result.append(branch_2)
 				
 				var branch_3 := starting_branch.connections[2]
 				var branch_3_size := branch_3.get_size()
 				@warning_ignore("integer_division")
 				var branch_3_bb := Rect2i(Vector2i((start_bb.size.x/2) + (branch_1_size.x/2), start_bb.end.y), branch_3_size)
 				if branch_3.is_main:
-					branch_3_bb = branch_3_bb.grow_side(SIDE_BOTTOM, 10)
-					result.append_array(alloc_branches(branch_3))
+					branch_3_bb = branch_3_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
+					result.append_array(place_branches(branch_3))
 				branch_3.bb = branch_3_bb
-				result.append(branch_3_bb)
+				result.append(branch_3)
 			_:
 				assert(false, "last room on starting branch is not a split")
 		
 		return result
 	
+	var connections_size := branch.get_connections_size()
+	var connections_bb := Rect2i(Vector2i.MAX, connections_size)
 	
+	var top_left := branch.bb.position
+	var top_right := branch.bb.position + Vector2i(branch.bb.size.x, 0)
+	var bot_left := branch.bb.position + Vector2i(0, branch.bb.size.y)
+	var bot_right := branch.bb.end
+	
+	var top_l_dist := top_left.distance_squared_to(Vector2i.ZERO)
+	var top_r_dist := top_right.distance_squared_to(Vector2i.ZERO)
+	var bot_l_dist := bot_left.distance_squared_to(Vector2i.ZERO)
+	var bot_r_dist := bot_right.distance_squared_to(Vector2i.ZERO)
+	
+	var sorted_dists:Array[int] = [top_l_dist, top_r_dist, bot_l_dist, bot_r_dist]
+	sorted_dists.sort()
+	var min_dist := sorted_dists[0]
+	var second_min_dist := sorted_dists[1]
+	
+	@warning_ignore("unsafe_call_argument")
+	var top_side_closest := (min_dist == top_l_dist or min_dist == top_r_dist) and (second_min_dist == top_l_dist or second_min_dist == top_r_dist)
+	var bot_side_closest := (min_dist == bot_l_dist or min_dist == bot_r_dist) and (second_min_dist == bot_l_dist or second_min_dist == bot_r_dist)
+	var left_side_closest := (min_dist == top_l_dist or min_dist == bot_l_dist) and (second_min_dist == top_l_dist or second_min_dist == bot_l_dist)
+	#var right_side_closest := (min_dist == top_r_dist or min_dist == bot_r_dist) and (second_min_dist == top_r_dist or second_min_dist == bot_r_dist)
+
+	
+	if top_side_closest:
+		pass
+	elif bot_side_closest:
+		pass
+	elif left_side_closest:
+		pass
+	else:
+		pass
 	
 	return result
 

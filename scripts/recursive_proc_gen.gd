@@ -2,11 +2,11 @@ extends Node2D
 
 
 func _ready() -> void:
-	var dungeon := Dungeon.new(randi(), 5, 5)
+	var dungeon := Dungeon.new(randi(), 5, 8)
 	dungeon.first_pass()
-	var branches := dungeon.alloc_branches()
+	var branches := dungeon.place_branches()
 	print(dungeon)
-	print(branches)
+	#print(branches)
 	@warning_ignore("return_value_discarded")
 	draw.connect(draw_rects.bind(branches))
 	
@@ -17,7 +17,11 @@ func _ready() -> void:
 	#print(dungeon.starting_branch.connections[0]," ", dungeon.starting_branch.connections[0].depth)
 	#print(dungeon.starting_branch.connections[1]," ", dungeon.starting_branch.connections[1].depth)
 
-func draw_rects(branches: Array[Rect2i]) -> void: 
-	for rect in branches:
-		draw_rect(rect, Color.RED)
-		draw_rect(rect, Color.BLACK, false)
+func draw_rects(branches: Array[Dungeon.Branch]) -> void: 
+	for branch in branches:
+		print(branch.bb)
+		if branch.is_main:
+			draw_rect(branch.bb, Color.RED)
+		else:
+			draw_rect(branch.bb, Color.BLUE)
+		draw_rect(branch.bb, Color.BLACK, false)
