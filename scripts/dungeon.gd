@@ -97,6 +97,7 @@ class Branch extends RefCounted:
 	func _init(starting_room: Room, length: int, depth: int = 0, is_main: bool = false) -> void:
 		self.depth = depth
 		
+		assert(length > 0)
 		self.length = length
 		var err := rooms.resize(length) as Error
 		assert(!err)
@@ -140,7 +141,7 @@ class Branch extends RefCounted:
 
 const SPLIT_3_WAYS := 0.35
 
-const MAX_BRANCH_DIFFERENCE := 3
+const MAX_BRANCH_DIFFE := 3
 
 var starting_branch: Branch
 
@@ -161,13 +162,13 @@ func _generate_blank_connecctions(branch: Branch) -> Branch:
 			
 			var next_main := rng.randf()
 			
-			var branch_1 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.3333333333 and branch.is_main))
+			var branch_1 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFE, max_branch_size), next_depth, next_main < 0.3333333333 and branch.is_main))
 			branch_1.rooms[0] = split
 			branch.connections.append(branch_1)
-			var branch_2 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.3333333333 and next_main < 0.666666666 and branch.is_main))
+			var branch_2 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFE, max_branch_size), next_depth, next_main > 0.3333333333 and next_main < 0.666666666 and branch.is_main))
 			branch_2.rooms[0] = split
 			branch.connections.append(branch_2)
-			var branch_3 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.6666666666 and branch.is_main))
+			var branch_3 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFE, max_branch_size), next_depth, next_main > 0.6666666666 and branch.is_main))
 			branch_3.rooms[0] = split
 			branch.connections.append(branch_3)
 		else:
@@ -176,10 +177,10 @@ func _generate_blank_connecctions(branch: Branch) -> Branch:
 			
 			var next_main := rng.randf()
 			
-			var branch_1 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main < 0.5 and branch.is_main))
+			var branch_1 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFE, max_branch_size), next_depth, next_main < 0.5 and branch.is_main))
 			branch_1.rooms[0] = split
 			branch.connections.append(branch_1)
-			var branch_2 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), next_depth, next_main > 0.5 and branch.is_main))
+			var branch_2 := _generate_blank_connecctions(Branch.new(split, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFE, max_branch_size), next_depth, next_main > 0.5 and branch.is_main))
 			branch_2.rooms[0] = split
 			branch.connections.append(branch_2)
 		
@@ -207,16 +208,19 @@ func first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
 		first_pass(branch, room_index + 1)
 
 
-func place_branches(branch: Branch = starting_branch) -> Array[Branch]:
+@warning_ignore("integer_division")
+func place_branches(branch: Branch = starting_branch, prev_branches: Array[Branch] = [], last_split_point: Vector2i = Vector2i.MAX) -> Array[Branch]:
 	assert(branch.is_main)
-	
-	var alloc_branches := func(prev_branch: Branch) -> void:
-		pass
 	
 	const BUFFER_SPACE := 10
 	
 	#var result: Array[Rect2i]
-	var result: Array[Branch]
+	#var result: Array[Branch]
+	
+	#var alloc_branches := func(prev_branch: Branch) -> void:
+		#pass
+	
+	
 	
 	if branch.depth == 0:
 		assert(branch == starting_branch)
@@ -233,7 +237,10 @@ func place_branches(branch: Branch = starting_branch) -> Array[Branch]:
 		start_bb = start_bb.grow_side(SIDE_BOTTOM, 10)
 		
 		starting_branch.bb = start_bb
-		result.append(starting_branch)
+		prev_branches.append(starting_branch)
+		
+		@warning_ignore("integer_division")
+		last_split_point = Vector2i(start_bb.size.x/2, start_bb.end.y)
 		
 		var last_room_type := starting_branch.rooms[-1].type
 		match last_room_type:
@@ -241,98 +248,130 @@ func place_branches(branch: Branch = starting_branch) -> Array[Branch]:
 				assert(branch.connections.size() == 2)
 				var branch_1 := starting_branch.connections[0]
 				@warning_ignore("integer_division")
-				var branch_1_bb := Rect2i(Vector2i(start_bb.size.x/2, start_bb.end.y), branch_1.get_size())
-				if branch_1.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
-					result.append_array(place_branches(branch_1))
+				var branch_1_bb := Rect2i(last_split_point, branch_1.get_size())
+				branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE) if branch_1.is_main else branch_1_bb
 				branch_1.bb = branch_1_bb
-				result.append(branch_1)
+				if branch_1.is_main:
+					prev_branches.append_array(place_branches(branch_1, prev_branches, last_split_point))
+				prev_branches.append(branch_1)
 				
 				var branch_2 := starting_branch.connections[1]
 				var branch_2_size := branch_2.get_size()
 				@warning_ignore("integer_division")
 				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_2_size.x), start_bb.end.y), branch_2_size)
-				if branch_2.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
-					result.append_array(place_branches(branch_2))
+				branch_2_bb = branch_2_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE) if branch_2.is_main else branch_2_bb
 				branch_2.bb = branch_2_bb
-				result.append(branch_2)
+				if branch_2.is_main:
+					prev_branches.append_array(place_branches(branch_2, prev_branches, last_split_point))
+				prev_branches.append(branch_2)
 			Room.types.SPLIT_3:
 				assert(branch.connections.size() == 3)
 				var branch_1 := starting_branch.connections[0]
 				var branch_1_size := branch_1.get_size()
 				@warning_ignore("integer_division")
 				var branch_1_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2), start_bb.end.y), branch_1_size)
-				if branch_1.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
-					result.append_array(place_branches(branch_1))
 				branch_1.bb = branch_1_bb
-				result.append(branch_1)
+				branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE) if branch_1.is_main else branch_1_bb
+				if branch_1.is_main:
+					prev_branches.append_array(place_branches(branch_1, prev_branches, last_split_point))
+				prev_branches.append(branch_1)
 				
 				var branch_2 := starting_branch.connections[1]
 				var branch_2_size := branch_2.get_size()
 				@warning_ignore("integer_division")
 				var branch_2_bb := Rect2i(Vector2i((start_bb.size.x/2) - (branch_1_size.x/2) - branch_2_size.x, start_bb.end.y), branch_2_size)
-				if branch_2.is_main:
-					branch_1_bb = branch_1_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
-					result.append_array(place_branches(branch_2))
+				branch_2_bb = branch_2_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE) if branch_2.is_main else branch_2_bb
 				branch_2.bb = branch_2_bb
-				result.append(branch_2)
+				if branch_2.is_main:
+					prev_branches.append_array(place_branches(branch_2, prev_branches, last_split_point))
+				prev_branches.append(branch_2)
 				
 				var branch_3 := starting_branch.connections[2]
 				var branch_3_size := branch_3.get_size()
 				@warning_ignore("integer_division")
 				var branch_3_bb := Rect2i(Vector2i((start_bb.size.x/2) + (branch_1_size.x/2), start_bb.end.y), branch_3_size)
-				if branch_3.is_main:
-					branch_3_bb = branch_3_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE)
-					result.append_array(place_branches(branch_3))
+				branch_3_bb = branch_3_bb.grow_side(SIDE_BOTTOM, BUFFER_SPACE) if branch_3.is_main else branch_3_bb
 				branch_3.bb = branch_3_bb
-				result.append(branch_3)
+				if branch_3.is_main:
+					prev_branches.append_array(place_branches(branch_3, prev_branches, last_split_point))
+				prev_branches.append(branch_3)
 			_:
 				assert(false, "last room on starting branch is not a split")
 		
-		return result
+		return prev_branches
 	
 	var connections_size := branch.get_connections_size()
 	var connections_bb := Rect2i(Vector2i.MAX, connections_size)
+	var check_interections := func() -> bool:
+		for b in prev_branches:
+			if connections_bb.intersects(b.bb):
+				return false
+			
+		return true
 	
 	var top_left := branch.bb.position
 	var top_right := branch.bb.position + Vector2i(branch.bb.size.x, 0)
 	var bot_left := branch.bb.position + Vector2i(0, branch.bb.size.y)
 	var bot_right := branch.bb.end
 	
-	var top_l_dist := top_left.distance_squared_to(Vector2i.ZERO)
-	var top_r_dist := top_right.distance_squared_to(Vector2i.ZERO)
-	var bot_l_dist := bot_left.distance_squared_to(Vector2i.ZERO)
-	var bot_r_dist := bot_right.distance_squared_to(Vector2i.ZERO)
+	# in order to able to be accesesed by @GlobalScope.Corner
+	var corners: Array[Vector2i] = [top_left, top_right, bot_right, bot_left] 
 	
-	var sorted_dists:Array[int] = [top_l_dist, top_r_dist, bot_l_dist, bot_r_dist]
-	sorted_dists.sort()
-	var min_dist := sorted_dists[0]
-	var second_min_dist := sorted_dists[1]
+	var dists_to_cent := corners.map(func(corner: Vector2i) -> int: return corner.distance_squared_to(Vector2i.ZERO))
 	
-	@warning_ignore("unsafe_call_argument")
-	var top_side_closest := (min_dist == top_l_dist or min_dist == top_r_dist) and (second_min_dist == top_l_dist or second_min_dist == top_r_dist)
-	var bot_side_closest := (min_dist == bot_l_dist or min_dist == bot_r_dist) and (second_min_dist == bot_l_dist or second_min_dist == bot_r_dist)
-	var left_side_closest := (min_dist == top_l_dist or min_dist == bot_l_dist) and (second_min_dist == top_l_dist or second_min_dist == bot_l_dist)
-	#var right_side_closest := (min_dist == top_r_dist or min_dist == bot_r_dist) and (second_min_dist == top_r_dist or second_min_dist == bot_r_dist)
-
+	var sorted_dists_to_cent := dists_to_cent
+	sorted_dists_to_cent.sort()
 	
-	if top_side_closest:
-		pass
-	elif bot_side_closest:
-		pass
-	elif left_side_closest:
-		pass
-	else:
-		pass
+	#assert(corner_dists_to_last.find(min_dist_to_last) == corner_dists_to_cent.find(min_dist_to_cent) or corner_dists_to_last.find(min_dist_to_last) == corner_dists_to_cent.find(second_min_dist_to_cent))
 	
-	return result
+	for i in range(4):
+		if connections_bb.position != Vector2i.MAX:
+			break
+		
+		print("top left, top right, bot right, bot left")
+		print(corners)
+		var min_dist_to_cent: int = sorted_dists_to_cent[i]
+		var closest_to_cent := corners[dists_to_cent.find(min_dist_to_cent)]
+		print(closest_to_cent)
+		var sec_min_dist_to_cent: int = sorted_dists_to_cent[wrapi(i+1, 0, 4)]
+		var sec_closest_to_cent := corners[dists_to_cent.find(sec_min_dist_to_cent)]
+		print(sec_closest_to_cent)
+		
+		var closest_to_last := closest_to_cent if closest_to_cent.distance_squared_to(last_split_point) < sec_closest_to_cent.distance_squared_to(last_split_point) else sec_closest_to_cent
+		var sec_closest_to_last := sec_closest_to_cent if closest_to_cent == closest_to_last else closest_to_cent
+		
+		#print(closest_to_cent, sec_closest_to_cent, closest_to_last)
+		
+		if closest_to_cent.x == sec_closest_to_cent.x:
+			assert(sign(closest_to_last.y - sec_closest_to_last.y) != 0)
+			
+			for y in range(closest_to_last.y, sec_closest_to_last.y, sign(sec_closest_to_last.y - closest_to_last.y)):
+				#print("y: ",y)
+				pass
+		elif closest_to_cent.y == sec_closest_to_cent.y:
+			assert(sign(closest_to_last.x - sec_closest_to_last.x) != 0)
+			
+			for x in range(closest_to_last.x, sec_closest_to_last.x, sign(sec_closest_to_last.x - closest_to_last.x)):
+				#print("x: ",x)
+				
+				connections_bb.position = Vector2i(x, closest_to_last.y - connections_size.y)
+				if check_interections.call():
+					print(prev_branches)
+					var test_branch := Branch.new(Room.new(Room.types.BLANK), 1, 0, true)
+					test_branch.bb = connections_bb
+					prev_branches.append(test_branch)
+					break
+				else:
+					connections_bb.position = Vector2i.MAX
+		else:
+			assert(false, "missalinged side endpoints")
+	
+	return prev_branches
 
 
 @warning_ignore("shadowed_variable", "shadowed_global_identifier")
 func _init(seed: int, max_depth: int, max_branch_size: int) -> void:
-	assert(max_branch_size - MAX_BRANCH_DIFFERENCE > 1, "your branches are too small")
+	assert(max_branch_size - MAX_BRANCH_DIFFE > 1, "your branches are too small")
 	
 	self.seed = seed
 	rng.seed = seed
@@ -340,7 +379,7 @@ func _init(seed: int, max_depth: int, max_branch_size: int) -> void:
 	self.max_branch_size = max_branch_size
 	
 	var starting_room := Room.new(Room.types.START)
-	var branch := Branch.new(starting_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFERENCE, max_branch_size), 0, true)
+	var branch := Branch.new(starting_room, rng.randi_range(max_branch_size - MAX_BRANCH_DIFFE, max_branch_size), 0, true)
 	
 	starting_branch = _generate_blank_connecctions(branch)
 

@@ -19,7 +19,7 @@ func _ready() -> void:
 
 func draw_rects(branches: Array[Dungeon.Branch]) -> void: 
 	for branch in branches:
-		print(branch.bb)
+		#print(branch.bb)
 		if branch.is_main:
 			draw_rect(branch.bb, Color.RED)
 		else:
