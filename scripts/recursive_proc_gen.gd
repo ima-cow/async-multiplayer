@@ -2,10 +2,13 @@ extends Node2D
 
 
 func _ready() -> void:
-	var dungeon := Dungeon.new(randi(), 5, 8)
+	#580016261
+	#2220045139
+	#312134275
+	var dungeon := Dungeon.new(312134275, 5, 8)
 	dungeon.first_pass()
 	var branches := dungeon.place_branches()
-	print(dungeon)
+	#print(dungeon)
 	#print(branches)
 	@warning_ignore("return_value_discarded")
 	draw.connect(draw_rects.bind(branches))
@@ -17,9 +20,20 @@ func _ready() -> void:
 	#print(dungeon.starting_branch.connections[0]," ", dungeon.starting_branch.connections[0].depth)
 	#print(dungeon.starting_branch.connections[1]," ", dungeon.starting_branch.connections[1].depth)
 
+#func _draw() -> void:
+	#draw_line()
+
 func draw_rects(branches: Array[Dungeon.Branch]) -> void: 
-	for branch in branches:
+	print(branches[7])
+	for i in branches.size():
 		#print(branch.bb)
+		#draw_line(Vector2i(branch.bb.size.x/2, branch.bb.position.y), Vector2i(branch.bb.size.x/2, branch.bb.end.y), Color.BLACK)
+		#print(Vector2i(branch.bb.size.x/2, branch.bb.position.y), Vector2i(branch.bb.size.x/2, branch.bb.end.y))
+		if i != 6:
+			continue
+		
+		var branch := branches[i]
+		
 		if branch.is_main:
 			draw_rect(branch.bb, Color.RED)
 		else:
