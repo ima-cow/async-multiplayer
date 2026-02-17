@@ -5,11 +5,16 @@ func _ready() -> void:
 	#580016261
 	#2220045139
 	#312134275
-	var dungeon := Dungeon.new(312134275, 5, 8)
+	#777890827
+	#727014943
+	#463874050
+	#3600790370
+	#4284279709
+	var dungeon := Dungeon.new(randi(), 5, 8)
 	dungeon.first_pass()
 	var branches := dungeon.place_branches()
 	#print(dungeon)
-	#print(branches)
+	print(branches)
 	@warning_ignore("return_value_discarded")
 	draw.connect(draw_rects.bind(branches))
 	
@@ -24,16 +29,8 @@ func _ready() -> void:
 	#draw_line()
 
 func draw_rects(branches: Array[Dungeon.Branch]) -> void: 
-	print(branches[7])
-	for i in branches.size():
-		#print(branch.bb)
-		#draw_line(Vector2i(branch.bb.size.x/2, branch.bb.position.y), Vector2i(branch.bb.size.x/2, branch.bb.end.y), Color.BLACK)
-		#print(Vector2i(branch.bb.size.x/2, branch.bb.position.y), Vector2i(branch.bb.size.x/2, branch.bb.end.y))
-		if i != 6:
-			continue
-		
-		var branch := branches[i]
-		
+	#print(branches[7])
+	for branch in branches:
 		if branch.is_main:
 			draw_rect(branch.bb, Color.RED)
 		else:
