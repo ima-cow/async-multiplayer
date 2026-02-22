@@ -208,6 +208,14 @@ func first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
 		first_pass(branch, room_index + 1)
 
 
+func dist_sqr_line_to_zero(line: Vector4i) -> int:
+	#chopped version of the formula: line.w is x1, line.x is y1, line.y is x2, line.z is y2
+	var line_length_sqr := ((line.x - line.z) ** 2) + ((line.w - line.y) ** 2)
+	var tri_area_sqr := absi((line.y * line.x) - (line.z * line.w)) ** 2
+	
+	return roundi(float(tri_area_sqr) / float(line_length_sqr))
+
+
 @warning_ignore("integer_division")
 func place_branches(branch: Branch = starting_branch, prev_branches: Array[Branch] = [], last_split_point: Vector2i = Vector2i.MAX) -> Array[Branch]:
 	assert(branch.is_main)
@@ -235,9 +243,6 @@ func place_branches(branch: Branch = starting_branch, prev_branches: Array[Branc
 				for j in range(i):
 					var prev_branch_size := branch.connections[j].get_size()
 					cur_branch.bb.position.y += prev_branch_size.y
-			
-			var buffer_amount := absi(bb.size.y - cur_branch_size.y) if horizontal else absi(bb.size.x - cur_branch_size.x)
-			print(branch.depth," ; ", buffer_amount)
 			
 			if cur_branch.is_main:
 				main_branch = cur_branch
@@ -305,33 +310,46 @@ func place_branches(branch: Branch = starting_branch, prev_branches: Array[Branc
 	var bot_left := branch.bb.position + Vector2i(0, branch.bb.size.y)
 	var bot_right := branch.bb.end
 	
-	# in order to able to be accesesed by @GlobalScope.Corner
-	var corners: Array[Vector2i] = [top_left, top_right, bot_right, bot_left]
+	#abuse of a vec4i as a union of 2 vec2i
+	var top_side := Vector4i(top_left.x, top_left.y, top_right.x, top_right.y)
+	var right_side := Vector4i(top_right.x, top_right.y, bot_right.x, bot_right.y)
+	var bot_side := Vector4i(bot_left.x, bot_left.y, bot_right.x, bot_right.y)
+	var left_side := Vector4i(top_left.x, top_left.y, bot_left.x, bot_left.y)
 	
-	var dists_to_cent := corners.map(func(corner: Vector2i) -> int: return corner.distance_squared_to(Vector2i.ZERO))
+	# in order to be acessed by @GlobalScope.Side
+	var sides: Array[Vector4i] = [left_side, top_side, right_side, bot_side]
+	print(sides)
 	
-	var sorted_dists_to_cent := dists_to_cent
+	var dists_to_cent := sides.map(dist_sqr_line_to_zero)
+	
+	var sorted_dists_to_cent := dists_to_cent.duplicate()
 	sorted_dists_to_cent.sort()
-		
+	print("d: ", branch.depth," u: ",dists_to_cent, " s: ",sorted_dists_to_cent)
+	
+	
 	for i in range(4):
 		if connections_bb.position != Vector2i.MAX:
 			break
 		
 		var min_dist_to_cent: int = sorted_dists_to_cent[i]
 		var closest_to_cent_idx := dists_to_cent.find(min_dist_to_cent)
-		var closest_to_cent := corners[closest_to_cent_idx]
-		var sec_min_dist_to_cent: int = sorted_dists_to_cent[wrapi(i+1, 0, 4)]
+		var closest_to_cent := sides[closest_to_cent_idx]
+		var sec_min_dist_to_cent: int = sorted_dists_to_cent[wrapi(i + 1, 0, 4)]
 		var sec_closest_to_cent_idx := dists_to_cent.find(sec_min_dist_to_cent)
-		var sec_closest_to_cent := corners[sec_closest_to_cent_idx]
+		var sec_closest_to_cent := sides[sec_closest_to_cent_idx]
 		
-		var closest_to_last := closest_to_cent if closest_to_cent.distance_squared_to(last_split_point) < sec_closest_to_cent.distance_squared_to(last_split_point) else sec_closest_to_cent
+		print("d: ", branch.depth, " i: ",i," 1c: ",closest_to_cent_idx, " 2c: ",sec_closest_to_cent_idx)
+		
+		continue
+		
+		assert(false)
+		var closest_to_last := closest_to_cent if closest_to_cent.distance_squared_to(Vector4i.ZERO) < sec_closest_to_cent.distance_squared_to(Vector4i.ZERO) else sec_closest_to_cent
 		var closest_to_last_idx := closest_to_cent_idx if closest_to_last == closest_to_cent else sec_closest_to_cent_idx
 		var sec_closest_to_last := sec_closest_to_cent if closest_to_cent == closest_to_last else closest_to_cent
 		var sec_closest_to_last_idx := sec_closest_to_cent_idx if sec_closest_to_last == sec_closest_to_cent else closest_to_cent_idx
 		
 		if closest_to_cent.x == sec_closest_to_cent.x:
 			
-			@warning_ignore("confusable_local_declaration")
 			var temp := connections_bb.size.x
 			connections_bb.size.x = connections_bb.size.y
 			connections_bb.size.y = temp
@@ -341,9 +359,9 @@ func place_branches(branch: Branch = starting_branch, prev_branches: Array[Branc
 			assert(flow_dir != 0)
 			
 			@warning_ignore("integer_division")
-			var y_min := closest_to_last.y - (connections_size.y/2) 
+			var y_min := closest_to_last.y - (connections_size.y / 2) 
 			@warning_ignore("integer_division")
-			var y_max := sec_closest_to_last.y - (connections_size.y/2)
+			var y_max := sec_closest_to_last.y - (connections_size.y / 2)
 			var main_side := closest_to_last_idx == CORNER_TOP_LEFT or closest_to_last_idx == CORNER_BOTTOM_LEFT
 			var x_offset := connections_size.x if main_side else 0
 			var x := closest_to_last.x + x_offset

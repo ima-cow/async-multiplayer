@@ -16,7 +16,7 @@ func _ready() -> void:
 	#2836715384
 	#1404174227
 	#2943178647
-	var dungeon := Dungeon.new(randi(), 15, 10)
+	var dungeon := Dungeon.new(2619466510, 15, 10)
 	dungeon.first_pass()
 	var branches := dungeon.place_branches()
 	#print(dungeon)
