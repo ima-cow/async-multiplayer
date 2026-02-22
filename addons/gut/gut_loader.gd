@@ -25,14 +25,14 @@
 const WARNING_PATH : String = 'debug/gdscript/warnings/'
 
 
-static var were_addons_disabled : bool = true
+#static var were_addons_disabled : bool = true
 
 
 @warning_ignore("unsafe_method_access")
 @warning_ignore("unsafe_property_access")
 @warning_ignore("untyped_declaration")
 static func _static_init() -> void:
-	were_addons_disabled = ProjectSettings.get(str(WARNING_PATH, 'exclude_addons'))
+	#were_addons_disabled = ProjectSettings.get(str(WARNING_PATH, 'exclude_addons'))
 	ProjectSettings.set(str(WARNING_PATH, 'exclude_addons'), true)
 
 	var WarningsManager = load('res://addons/gut/warnings_manager.gd')
@@ -48,8 +48,8 @@ static func _static_init() -> void:
 	# With the warnings manager disabled and gut_default warnings:
 	#	test_warnings_manager.gd 	-> 46 errors
 	#	full run 					-> 165 errors.
-	if(WarningsManager.disabled):
-		ProjectSettings.set(str(WARNING_PATH, 'exclude_addons'), were_addons_disabled)
+	#if(WarningsManager.disabled):
+		#ProjectSettings.set(str(WARNING_PATH, 'exclude_addons'), were_addons_disabled)
 
 	# Force a reference to utils.gd by path.  Using the class_name would cause
 	# utils.gd to load when this script loads, before we could turn off the
@@ -64,13 +64,13 @@ static func _static_init() -> void:
 	# Make sure that the values set in WarningsManager's static_init actually
 	# reflect the project settings and not whatever we do here to make things
 	# not warn.
-	WarningsManager._project_warnings.exclude_addons = were_addons_disabled
+	#WarningsManager._project_warnings.exclude_addons = were_addons_disabled
 
 
 # this can be called before tests are run to reinstate whatever exclude_addons
 # was set to before this script disabled it.
-static func restore_ignore_addons() -> void:
-	ProjectSettings.set(str(WARNING_PATH, 'exclude_addons'), were_addons_disabled)
+#static func restore_ignore_addons() -> void:
+	#ProjectSettings.set(str(WARNING_PATH, 'exclude_addons'), were_addons_disabled)
 
 
 

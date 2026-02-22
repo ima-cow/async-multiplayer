@@ -10,11 +10,17 @@ func _ready() -> void:
 	#463874050
 	#3600790370
 	#4284279709
-	var dungeon := Dungeon.new(randi(), 5, 8)
+	#2653942006
+	#1425009136
+	#1204381429 - err flow dir == 0
+	#2836715384
+	#1404174227
+	#2943178647
+	var dungeon := Dungeon.new(randi(), 15, 10)
 	dungeon.first_pass()
 	var branches := dungeon.place_branches()
 	#print(dungeon)
-	print(branches)
+	#print(branches)
 	@warning_ignore("return_value_discarded")
 	draw.connect(draw_rects.bind(branches))
 	

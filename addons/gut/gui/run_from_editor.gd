@@ -16,4 +16,4 @@ func _ready() -> void:
 	var runner : Node = load("res://addons/gut/gui/GutRunner.tscn").instantiate()
 	add_child(runner)
 	runner.run_from_editor()
-	GutLoader.restore_ignore_addons()
+	#GutLoader.restore_ignore_addons()
