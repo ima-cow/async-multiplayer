@@ -208,12 +208,25 @@ func first_pass(branch: Branch = starting_branch, room_index: int = 0) -> void:
 		first_pass(branch, room_index + 1)
 
 
-func dist_sqr_line_to_zero(line: Vector4i) -> int:
-	#chopped version of the formula: line.w is x1, line.x is y1, line.y is x2, line.z is y2
-	var line_length_sqr := ((line.x - line.z) ** 2) + ((line.w - line.y) ** 2)
-	var tri_area_sqr := absi((line.y * line.x) - (line.z * line.w)) ** 2
+class Edge extends RefCounted:
+	var end_1: Vector2i
+	var end_2: Vector2i
 	
-	return roundi(float(tri_area_sqr) / float(line_length_sqr))
+	var side: Side
+
+	func dist_sqr_to_zero() -> int:
+		var tri_area_sqr := absi((end_2.x * end_1.y) - (end_2.y * end_1.x)) ** 2
+		var line_length_sqr := ((end_2.y - end_1.y) ** 2) + ((end_2.x - end_1.x) ** 2)
+		
+		return roundi(float(tri_area_sqr) / float(line_length_sqr))
+	
+	@warning_ignore("shadowed_variable")
+	func _init(end_1: Vector2i, end_2: Vector2i, side: Side) -> void:
+		self.end_1 = end_1
+		self.end_2 = end_2
+		self.side = side
+
+
 
 
 @warning_ignore("integer_division")
@@ -310,45 +323,36 @@ func place_branches(branch: Branch = starting_branch, prev_branches: Array[Branc
 	var bot_left := branch.bb.position + Vector2i(0, branch.bb.size.y)
 	var bot_right := branch.bb.end
 	
-	#abuse of a vec4i as a union of 2 vec2i
-	var top_side := Vector4i(top_left.x, top_left.y, top_right.x, top_right.y)
-	var right_side := Vector4i(top_right.x, top_right.y, bot_right.x, bot_right.y)
-	var bot_side := Vector4i(bot_left.x, bot_left.y, bot_right.x, bot_right.y)
-	var left_side := Vector4i(top_left.x, top_left.y, bot_left.x, bot_left.y)
+	var left_side := Edge.new(top_left, bot_left, SIDE_LEFT)
+	var top_side := Edge.new(top_left, top_right, SIDE_TOP)
+	var right_side := Edge.new(top_right, bot_right, SIDE_RIGHT)
+	var bot_side := Edge.new(bot_left, bot_right, SIDE_BOTTOM)
 	
 	# in order to be acessed by @GlobalScope.Side
-	var sides: Array[Vector4i] = [left_side, top_side, right_side, bot_side]
+	var sides: Array[Edge] = [left_side, top_side, right_side, bot_side]
 	print(sides)
 	
-	var dists_to_cent := sides.map(dist_sqr_line_to_zero)
+	var sorted_sides := sides.duplicate()
+	sorted_sides.sort_custom(func(a: Edge, b: Edge) -> bool: return a.dist_sqr_to_zero() < b.dist_sqr_to_zero())
 	
-	var sorted_dists_to_cent := dists_to_cent.duplicate()
-	sorted_dists_to_cent.sort()
-	print("d: ", branch.depth," u: ",dists_to_cent, " s: ",sorted_dists_to_cent)
-	
-	
-	for i in range(4):
+	var num_sides := sides.size()
+	for i in range(num_sides):
 		if connections_bb.position != Vector2i.MAX:
 			break
 		
-		var min_dist_to_cent: int = sorted_dists_to_cent[i]
-		var closest_to_cent_idx := dists_to_cent.find(min_dist_to_cent)
-		var closest_to_cent := sides[closest_to_cent_idx]
-		var sec_min_dist_to_cent: int = sorted_dists_to_cent[wrapi(i + 1, 0, 4)]
-		var sec_closest_to_cent_idx := dists_to_cent.find(sec_min_dist_to_cent)
-		var sec_closest_to_cent := sides[sec_closest_to_cent_idx]
+		var closest_to_cent: Edge = sorted_sides[i]
 		
-		print("d: ", branch.depth, " i: ",i," 1c: ",closest_to_cent_idx, " 2c: ",sec_closest_to_cent_idx)
+		var closest_end := closest_to_cent.end_1 if closest_to_cent.end_1.distance_squared_to(Vector2i.ZERO) < closest_to_cent.end_2.distance_squared_to(Vector2i.ZERO) else closest_to_cent.end_2
+		var sec_closest_end := closest_to_cent.end_2 if closest_end == closest_to_cent.end_1 else closest_to_cent.end_1
 		
-		continue
+		match closest_to_cent.side:
+			SIDE_TOP, SIDE_BOTTOM:
+				pass
+			SIDE_LEFT, SIDE_RIGHT:
+				pass
 		
-		assert(false)
-		var closest_to_last := closest_to_cent if closest_to_cent.distance_squared_to(Vector4i.ZERO) < sec_closest_to_cent.distance_squared_to(Vector4i.ZERO) else sec_closest_to_cent
-		var closest_to_last_idx := closest_to_cent_idx if closest_to_last == closest_to_cent else sec_closest_to_cent_idx
-		var sec_closest_to_last := sec_closest_to_cent if closest_to_cent == closest_to_last else closest_to_cent
-		var sec_closest_to_last_idx := sec_closest_to_cent_idx if sec_closest_to_last == sec_closest_to_cent else closest_to_cent_idx
 		
-		if closest_to_cent.x == sec_closest_to_cent.x:
+		if closest_to_cent.side:
 			
 			var temp := connections_bb.size.x
 			connections_bb.size.x = connections_bb.size.y
