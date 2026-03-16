@@ -26,6 +26,7 @@ SteamManager="*res://scripts/steam_manager.gd"
 
 [debug]
 
+settings/gdscript/max_call_stack=2047
 gdscript/warnings/unassigned_variable=2
 gdscript/warnings/unassigned_variable_op_assign=2
 gdscript/warnings/untyped_declaration=2

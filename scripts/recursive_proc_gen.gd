@@ -2,43 +2,45 @@ extends Node2D
 
 
 func _ready() -> void:
-	#580016261
-	#2220045139
-	#312134275
-	#777890827
-	#727014943
-	#463874050
-	#3600790370
-	#4284279709
-	#2653942006
-	#1425009136
-	#1204381429 - err flow dir == 0
-	#2836715384
-	#1404174227
-	#2943178647
-	var dungeon := Dungeon.new(2619466510, 15, 10)
+	#3489947376 - failing
+	#1437557178
+	#3078261895 - fails
+	var dungeon := Dungeon.new(0, 10)
 	dungeon.first_pass()
-	var branches := dungeon.place_branches()
+	
 	#print(dungeon)
-	#print(branches)
+	
+	var branches_placed := dungeon.place_rooms()
+	
+	assert(branches_placed)
+	
+	#print(dungeon.starting_branch.connections[0].bb)
+	
 	@warning_ignore("return_value_discarded")
-	draw.connect(draw_rects.bind(branches))
-	
-	#print(dungeon.starting_branch.connections[0].id)
-	#dungeon._to_string()
-	#print(dungeon.starting_branch.connections[0].depth)
-	
-	#print(dungeon.starting_branch.connections[0]," ", dungeon.starting_branch.connections[0].depth)
-	#print(dungeon.starting_branch.connections[1]," ", dungeon.starting_branch.connections[1].depth)
+	draw.connect(draw_rooms.bind(dungeon))
 
-#func _draw() -> void:
-	#draw_line()
-
-func draw_rects(branches: Array[Dungeon.Branch]) -> void: 
-	#print(branches[7])
-	for branch in branches:
-		if branch.is_main:
-			draw_rect(branch.bb, Color.RED)
+func draw_rooms(dungeon: Dungeon, room: Dungeon.Room = dungeon.starting_room) -> void:
+	if room.depth == 0:
+		draw_rect(dungeon.starting_room.bb, Color.PURPLE)
+		draw_rect(dungeon.starting_room.bb, Color.BLACK, false)
+		draw_circle(dungeon.starting_room.connection_point, 5, Color.BLACK)
+		draw_string(ThemeDB.fallback_font, dungeon.starting_room.bb.position, "0")
+	
+	var main_room: Dungeon.Room
+	
+	for r in room.connections:
+		#print(r.bb);
+		if r.is_main:
+			draw_rect(r.bb, Color.RED)
+			main_room = r
 		else:
-			draw_rect(branch.bb, Color.BLUE)
-		draw_rect(branch.bb, Color.BLACK, false)
+			draw_rect(r.bb, Color.BLUE)
+		draw_string(ThemeDB.fallback_font, r.bb.position, str(r.depth))
+		draw_rect(r.bb, Color.BLACK, false)
+		draw_circle(r.connection_point, 5, Color.BLACK)
+	
+	#print(main_branch.id)
+	if room.depth == dungeon.max_depth - 1:
+		return
+	else:
+		draw_rooms(dungeon, main_room)
