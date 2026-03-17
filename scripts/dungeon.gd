@@ -19,7 +19,7 @@ class Room extends RefCounted:
 	var depth: int
 	
 	var bb: Rect2i #bounding box
-	var connection_point: Vector2i
+	var connection_point := Vector2i.MAX
 	
 	
 	func get_connections_size() -> Vector2i:
@@ -118,12 +118,16 @@ var max_depth: int
 
 
 func _gen_blank_connecctions(room: Room, depth_in_branch: int = 0, overall_depth: int = 0) -> Room:
+	assert(room.is_main)
+	
+	if overall_depth == max_depth:
+		room.type = Room.types.END
+		return room
+	
 	var split_chance := 1 - pow(BRANCH_DECAY, -depth_in_branch / MAX_BRANCH_SIZE)
 	var num_new_branches := 1
 	
-	if overall_depth == max_depth:
-		num_new_branches = 0
-	elif room.is_main and rng.randf() < split_chance:
+	if room.is_main and rng.randf() < split_chance:
 		if rng.randf() < SPLIT_3_WAYS:
 			num_new_branches = 3
 		else:
@@ -137,12 +141,21 @@ func _gen_blank_connecctions(room: Room, depth_in_branch: int = 0, overall_depth
 	var err := room.connections.resize(num_new_branches)
 	assert(!err)
 	
+	if num_new_branches == 2:
+		room.type = Room.types.SPLIT_2
+	elif num_new_branches == 3:
+		room.type = Room.types.SPLIT_3
+	
 	room.next_main_idx = rng.randi_range(0, num_new_branches - 1)
 	
 	for i in range(num_new_branches):
-		var next_is_main := room.is_main and room.next_main_idx == i
-		var first_next_room := Room.new(Room.types.BLANK, overall_depth, next_is_main)
-		var next_room := _gen_blank_connecctions(first_next_room, depth_in_branch, overall_depth)
+		var next_room: Room
+		if room.next_main_idx == i:
+			var next_next_room := Room.new(Room.types.BLANK, overall_depth, true)
+			next_room = _gen_blank_connecctions(next_next_room, depth_in_branch, overall_depth)
+		else:
+			next_room = Room.new(Room.types.BLANK, overall_depth, false)
+		
 		room.connections[i] = next_room
 	
 	return room
@@ -220,10 +233,6 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 		assert(room == starting_room)
 		
 		starting_room.bb.position = Vector2i.ZERO
-		
-		#prev_rooms.append(starting_room)
-		#
-		#return place_rooms(starting_room.connections[0], prev_rooms)
 	
 	var connections_bb := Rect2i(Vector2i.MAX, connections_size)
 	
@@ -255,22 +264,30 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 		var closest_end := closest_to_cent.end_1 if end_1_closer else closest_to_cent.end_2
 		var sec_closest_end := closest_to_cent.end_2 if end_1_closer else closest_to_cent.end_1
 		
+		const BUFFER_SPACE := 10
 		var closest_side := closest_to_cent.side
 		match closest_side:
 			SIDE_TOP, SIDE_BOTTOM:
 				var flow_dir := signi(sec_closest_end.x - closest_end.x)
 				assert(flow_dir != 0)
+
+				var x_offset := 0
+				if room.connections.size() > 2 and room.next_main_idx != 1:
+					x_offset = room.connections[1].bb.size.x
+					
+					if room.next_main_idx == 3:
+						x_offset *= -1
 				
 				@warning_ignore("integer_division")
-				var x_min := closest_end.x - (connections_size.x / 2) 
+				var x_min := closest_end.x - (connections_size.x / 2) + x_offset
 				@warning_ignore("integer_division")
-				var x_max := sec_closest_end.x - (connections_size.x / 2)
+				var x_max := sec_closest_end.x - (connections_size.x / 2) + x_offset
 				
 				var main_side := closest_side == SIDE_TOP
 				var y_offset := connections_size.y if main_side else 0
 				var y := closest_end.y - y_offset
 				
-				for x in range(x_min, x_max, flow_dir):
+				for x in range(x_min + (BUFFER_SPACE * flow_dir), x_max - (BUFFER_SPACE * flow_dir), flow_dir):
 					connections_bb.position = Vector2i(x, y)
 					
 					if _check_interections(connections_bb, prev_rooms):
@@ -280,7 +297,7 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 						var main_room := room.connections[room.next_main_idx]
 						if place_rooms(main_room, prev_rooms):
 							@warning_ignore("integer_division")
-							var unoffset_x := x + (connections_size.x / 2)
+							var unoffset_x := x + (connections_size.x / 2) - x_offset
 							var unoffset_y := y + y_offset
 							
 							var connections_point := Vector2i(unoffset_x, unoffset_y)
@@ -298,16 +315,23 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 				var flow_dir := signi(sec_closest_end.y - closest_end.y)
 				assert(flow_dir != 0)
 				
+				var y_offset := 0
+				if room.connections.size() > 2 and room.next_main_idx != 1:
+					y_offset = room.connections[1].bb.size.y
+					
+					if room.next_main_idx == 0:
+						y_offset *= -1
+				
 				@warning_ignore("integer_division")
-				var y_min := closest_end.y - (connections_size.y / 2) 
+				var y_min := closest_end.y - (connections_size.y / 2) - y_offset
 				@warning_ignore("integer_division")
-				var y_max := sec_closest_end.y - (connections_size.y / 2)
+				var y_max := sec_closest_end.y - (connections_size.y / 2) - y_offset
 				
 				var main_side := closest_side == SIDE_LEFT
 				var x_offset := connections_size.x if main_side else 0
 				var x := closest_end.x - x_offset
 				
-				for y in range(y_min, y_max, flow_dir):
+				for y in range(y_min + (BUFFER_SPACE * flow_dir), y_max - (BUFFER_SPACE * flow_dir), flow_dir):
 					connections_bb.position = Vector2i(x, y)
 					
 					if _check_interections(connections_bb, prev_rooms):
@@ -318,7 +342,7 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 						if place_rooms(main_room, prev_rooms):
 							var unoffset_x := x + x_offset
 							@warning_ignore("integer_division")
-							var unoffset_y := y + (connections_size.y / 2)
+							var unoffset_y := y + (connections_size.y / 2) + y_offset
 							
 							var connections_point := Vector2i(unoffset_x, unoffset_y)
 							room.connection_point = connections_point
@@ -331,16 +355,10 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 				connections_bb.size.x = connections_bb.size.y
 				connections_bb.size.y = temp
 				connections_size = connections_bb.size
-		
-	
-	#print(branch.depth)
 	
 	if connections_bb.position == Vector2i.MAX:
-		#print(branch.depth, " ",false)
 		return false
 	else:
-		#print(true)
-		#print(branch.depth, " ",true)
 		return true
 
 
