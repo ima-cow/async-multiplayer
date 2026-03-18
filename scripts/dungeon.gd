@@ -167,6 +167,10 @@ func first_pass(room: Room = starting_room) -> void:
 			room.bb = Rect2i(Vector2i.MAX, Vector2i(rng.randi_range(100, 120), rng.randi_range(100, 120)))
 		Room.types.START:
 			room.bb = Rect2i(Vector2i.ZERO, Vector2i(rng.randi_range(100, 120), rng.randi_range(100, 120)))
+		Room.types.END, Room.types.SPLIT_2, Room.types.SPLIT_3:
+			room.bb = Rect2i(Vector2i.MAX, Vector2i(rng.randi_range(100, 120), rng.randi_range(100, 120)))
+		_:
+			assert(false, "invalid room type")
 	
 	@warning_ignore("narrowing_conversion")
 	
@@ -265,6 +269,7 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 		var sec_closest_end := closest_to_cent.end_2 if end_1_closer else closest_to_cent.end_1
 		
 		const BUFFER_SPACE := 10
+		const CENTER_INDEX := 1
 		var closest_side := closest_to_cent.side
 		match closest_side:
 			SIDE_TOP, SIDE_BOTTOM:
@@ -272,10 +277,11 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 				assert(flow_dir != 0)
 
 				var x_offset := 0
-				if room.connections.size() > 2 and room.next_main_idx != 1:
+				if room.connections.size() > 2 and room.next_main_idx != CENTER_INDEX:
 					x_offset = room.connections[1].bb.size.x
 					
-					if room.next_main_idx == 3:
+					const RIGHT_INDEX := 2 
+					if room.next_main_idx == RIGHT_INDEX:
 						x_offset *= -1
 				
 				@warning_ignore("integer_division")
@@ -300,8 +306,8 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 							var unoffset_x := x + (connections_size.x / 2) - x_offset
 							var unoffset_y := y + y_offset
 							
-							var connections_point := Vector2i(unoffset_x, unoffset_y)
-							room.connection_point = connections_point
+							var connection_point := Vector2i(unoffset_x, unoffset_y)
+							room.connection_point = connection_point
 							
 							break
 					
@@ -316,10 +322,11 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 				assert(flow_dir != 0)
 				
 				var y_offset := 0
-				if room.connections.size() > 2 and room.next_main_idx != 1:
+				if room.connections.size() > 2 and room.next_main_idx != CENTER_INDEX:
 					y_offset = room.connections[1].bb.size.y
 					
-					if room.next_main_idx == 0:
+					const LEFT_INDEX := 0
+					if room.next_main_idx == LEFT_INDEX:
 						y_offset *= -1
 				
 				@warning_ignore("integer_division")
@@ -344,8 +351,8 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 							@warning_ignore("integer_division")
 							var unoffset_y := y + (connections_size.y / 2) + y_offset
 							
-							var connections_point := Vector2i(unoffset_x, unoffset_y)
-							room.connection_point = connections_point
+							var connection_point := Vector2i(unoffset_x, unoffset_y)
+							room.connection_point = connection_point
 							
 							break
 					
@@ -384,6 +391,6 @@ func _to_string(room: Room = starting_room) -> String:
 	for r in room.connections:
 		for i in range(room.depth+1):
 			value += "\t"
-		value += str(r)  +" "+str(r.is_main) + "\n" + _to_string(r)
+		value += str(r)  +" "+str(r.depth) + "\n" + _to_string(r)
 	
 	return value
