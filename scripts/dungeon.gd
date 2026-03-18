@@ -22,15 +22,23 @@ class Room extends RefCounted:
 	var connection_point := Vector2i.MAX
 	
 	
-	func get_connections_size() -> Vector2i:
+	func get_connections_size(horizontal: bool) -> Vector2i:
 		var connections_size := Vector2i.ZERO
 		
-		for room in connections:
-			var room_size := room.bb.size
-			
-			connections_size.x += room_size.x
-			
-			connections_size.y = maxi(connections_size.y, room_size.y)
+		if horizontal:
+			for room in connections:
+				var room_size := room.bb.size
+				
+				connections_size.x += room_size.x
+				
+				connections_size.y = maxi(connections_size.y, room_size.y)
+		else:
+			for room in connections:
+				var room_size := room.bb.size
+				
+				connections_size.x = maxi(connections_size.x, room_size.x)
+				
+				connections_size.y += room_size.y
 		
 		return connections_size
 	
@@ -47,18 +55,17 @@ class Room extends RefCounted:
 		
 		for i in range(num_connections):
 			var cur_room := connections[i]
+			
 			var cur_room_size := cur_room.bb.size
 			
-			cur_room.connection_point = connection_point
-			
 			if is_horizontal:
-				cur_room.bb = Rect2i(connections_bb.position, Vector2i(cur_room_size.x, get_connections_size().y))
+				cur_room.bb = Rect2i(connections_bb.position, Vector2i(cur_room_size.x, connections_bb.size.y))
 				
 				for j in range(i):
 					var prev_room_size := connections[j].bb.size
 					cur_room.bb.position.x += prev_room_size.x
 			else:
-				cur_room.bb = Rect2i(connections_bb.position, Vector2i(get_connections_size().y, cur_room_size.y))
+				cur_room.bb = Rect2i(connections_bb.position, Vector2i(connections_bb.size.x, cur_room_size.y))
 				
 				for j in range(i):
 					var prev_room_size := connections[j].bb.size
@@ -67,6 +74,7 @@ class Room extends RefCounted:
 			assert(i == 0 or (cur_room.bb.position.y == connections[i - 1].bb.position.y and is_horizontal) or(cur_room.bb.position.x == connections[i - 1].bb.position.x and not is_horizontal) )
 			
 			result.append(cur_room)
+		
 		return result
 	
 	
@@ -128,10 +136,7 @@ func _gen_blank_connecctions(room: Room, depth_in_branch: int = 0, overall_depth
 	var num_new_branches := 1
 	
 	if room.is_main and rng.randf() < split_chance:
-		if rng.randf() < SPLIT_3_WAYS:
-			num_new_branches = 3
-		else:
-			num_new_branches = 2
+		num_new_branches = 2
 		depth_in_branch = 0
 	else:
 		depth_in_branch += 1
@@ -230,15 +235,11 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 	if room.depth == max_depth:
 		return true
 	
-	var connections_size := room.get_connections_size()
-	
 	
 	if room.depth == 0:
 		assert(room == starting_room)
 		
 		starting_room.bb.position = Vector2i.ZERO
-	
-	var connections_bb := Rect2i(Vector2i.MAX, connections_size)
 	
 	var top_left := room.bb.position
 	var top_right := room.bb.position + Vector2i(room.bb.size.x, 0)
@@ -257,11 +258,8 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 	# actually sorts in reverse order so we can pop_back
 	sorted_sides.sort_custom(func(a: Edge, b: Edge) -> bool: return a.dist_to_zero() > b.dist_to_zero())
 	
-	
-	while sorted_sides.size() != 0:
-		if connections_bb.position != Vector2i.MAX:
-			break
-		
+	var room_placed := false
+	while not room_placed and sorted_sides.size() > 0:
 		var closest_to_cent: Edge = sorted_sides.pop_back()
 		
 		var end_1_closer := closest_to_cent.end_1.distance_squared_to(Vector2i.ZERO) < closest_to_cent.end_2.distance_squared_to(Vector2i.ZERO)
@@ -273,9 +271,12 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 		var closest_side := closest_to_cent.side
 		match closest_side:
 			SIDE_TOP, SIDE_BOTTOM:
+				var connections_size := room.get_connections_size(true)
+				var connections_bb := Rect2i(Vector2i.MAX, connections_size)
+				
 				var flow_dir := signi(sec_closest_end.x - closest_end.x)
 				assert(flow_dir != 0)
-
+				
 				var x_offset := 0
 				if room.connections.size() > 2 and room.next_main_idx != CENTER_INDEX:
 					x_offset = room.connections[1].bb.size.x
@@ -297,11 +298,14 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 					connections_bb.position = Vector2i(x, y)
 					
 					if _check_interections(connections_bb, prev_rooms):
+						#if room.depth == 17:
+							#p
 						var test := room.place_connections(connections_bb)
 						prev_rooms.append_array(test)
 						
 						var main_room := room.connections[room.next_main_idx]
-						if place_rooms(main_room, prev_rooms):
+						room_placed = place_rooms(main_room, prev_rooms)
+						if room_placed:
 							@warning_ignore("integer_division")
 							var unoffset_x := x + (connections_size.x / 2) - x_offset
 							var unoffset_y := y + y_offset
@@ -313,10 +317,8 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 					
 					connections_bb.position = Vector2i.MAX
 			SIDE_LEFT, SIDE_RIGHT:
-				var temp := connections_bb.size.x
-				connections_bb.size.x = connections_bb.size.y
-				connections_bb.size.y = temp
-				connections_size = connections_bb.size
+				var connections_size := room.get_connections_size(false)
+				var connections_bb := Rect2i(Vector2i.MAX, connections_size)
 				
 				var flow_dir := signi(sec_closest_end.y - closest_end.y)
 				assert(flow_dir != 0)
@@ -346,7 +348,8 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 						prev_rooms.append_array(test)
 						
 						var main_room := room.connections[room.next_main_idx]
-						if place_rooms(main_room, prev_rooms):
+						room_placed = place_rooms(main_room, prev_rooms)
+						if room_placed:
 							var unoffset_x := x + x_offset
 							@warning_ignore("integer_division")
 							var unoffset_y := y + (connections_size.y / 2) + y_offset
@@ -357,16 +360,8 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 							break
 					
 					connections_bb.position = Vector2i.MAX
-				
-				temp = connections_bb.size.x
-				connections_bb.size.x = connections_bb.size.y
-				connections_bb.size.y = temp
-				connections_size = connections_bb.size
 	
-	if connections_bb.position == Vector2i.MAX:
-		return false
-	else:
-		return true
+	return room_placed
 
 
 @warning_ignore("shadowed_variable", "shadowed_global_identifier")

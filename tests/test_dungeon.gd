@@ -1,21 +1,13 @@
 extends GutTest
-#func before_each() -> void:
-	#gut.p("ran setup", 2)
-#
-#func after_each() -> void:
-	#gut.p("ran teardown", 2)
-#
-#func before_all() -> void:
-	#gut.p("ran run setup", 2)
-#
-#func after_all() -> void:
-	#gut.p("ran run teardown", 2)
+
+
 
 func test_no_intersections() -> void:
 	const NUM_ITERATIONS := 50
 	
 	for i in range(NUM_ITERATIONS):
 		pass
+	assert_eq('one', 'two', "my should pass")
 
 func test_assert_eq_number_not_equal() -> void:
 	assert_eq(1, 2, "Should fail.  1 != 2")
