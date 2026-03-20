@@ -2,25 +2,15 @@ extends Node2D
 
 
 func _ready() -> void:
-	#4049863471
-	#1308544262
-	var dungeon := Dungeon.new(randi(), 100)
+	var dungeon := Dungeon.new(randi(), 15)
 	dungeon.first_pass()
-	
+
 	var branches_placed := dungeon.place_rooms()
 	assert(branches_placed)
-	
-	#print(dungeon.starting_room.connections[0].connections[0].get_connections_size())
-	#print(dungeon.starting_room.connections[0].connections[0])
-	#print(dungeon.starting_room.connections[0].connections[0].connections[0].bb)
-	#print(dungeon.starting_room.connections[0].connections[0].connections[1].bb)
-	#print(dungeon.starting_room.bb.intersects(dungeon.starting_room.connections[0].connections[0].connections[0].bb))
-	#print(dungeon.starting_room.bb.intersects(dungeon.starting_room.connections[0].connections[0].connections[1].bb))
 
-	
+
 	@warning_ignore("return_value_discarded")
 	draw.connect(draw_rooms.bind(dungeon))
-	#draw.connect(func() -> void: draw_rect(Rect2i(Vector2i(-157, -274), Vector2i(116, 208)), Color.GREEN))
 
 func draw_rooms(dungeon: Dungeon, room: Dungeon.Room = dungeon.starting_room) -> void:
 	if room.depth == 0:

@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://dwmxi4lhy468y"]
+
+[ext_resource type="Script" uid="uid://j47wlyetra5k" path="res://scripts/room.gd" id="1_scgta"]
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_scgta"]
+normal = Vector2(1, 0)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_s0h78"]
+normal = Vector2(0, 1)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_fbq1s"]
+normal = Vector2(-1, 0)
+
+[sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_hnbyo"]
+
+[node name="Room1" type="Node" unique_id=1215866414]
+script = ExtResource("1_scgta")
+
+[node name="Sides" type="Node2D" parent="." unique_id=1608790148]
+
+[node name="LeftSide" type="RigidBody2D" parent="Sides" unique_id=1450250293]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/LeftSide" unique_id=767502021]
+shape = SubResource("WorldBoundaryShape2D_scgta")
+
+[node name="TopSide" type="RigidBody2D" parent="Sides" unique_id=1106226343]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/TopSide" unique_id=1604400151]
+shape = SubResource("WorldBoundaryShape2D_s0h78")
+
+[node name="RightSide" type="RigidBody2D" parent="Sides" unique_id=601356785]
+position = Vector2(1000, 1000)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/RightSide" unique_id=683094765]
+shape = SubResource("WorldBoundaryShape2D_fbq1s")
+
+[node name="BottomSide" type="RigidBody2D" parent="Sides" unique_id=1811502752]
+position = Vector2(1000, 1000)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/BottomSide" unique_id=337847759]
+shape = SubResource("WorldBoundaryShape2D_hnbyo")

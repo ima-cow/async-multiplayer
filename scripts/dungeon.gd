@@ -43,7 +43,7 @@ class Room extends RefCounted:
 		return connections_size
 	
 	
-	func place_connections(connections_bb: Rect2i) -> Array[Room]:
+	func place_connections(connections_bb: Rect2i, side: Side) -> Array[Room]:
 		var result: Array[Room]
 		
 		if connections.size() == 1:
@@ -56,22 +56,26 @@ class Room extends RefCounted:
 		for i in range(num_connections):
 			var cur_room := connections[i]
 			
-			var cur_room_size := cur_room.bb.size
-			
 			if is_horizontal:
-				cur_room.bb = Rect2i(connections_bb.position, Vector2i(cur_room_size.x, connections_bb.size.y))
+				cur_room.bb.position = connections_bb.position
+				
+				if side == SIDE_TOP:
+					cur_room.bb.position.y += connections_bb.size.y - cur_room.bb.size.y
 				
 				for j in range(i):
 					var prev_room_size := connections[j].bb.size
 					cur_room.bb.position.x += prev_room_size.x
 			else:
-				cur_room.bb = Rect2i(connections_bb.position, Vector2i(connections_bb.size.x, cur_room_size.y))
+				cur_room.bb.position = connections_bb.position
+				
+				if side == SIDE_LEFT:
+					cur_room.bb.position.x += connections_bb.size.x - cur_room.bb.size.x
 				
 				for j in range(i):
 					var prev_room_size := connections[j].bb.size
 					cur_room.bb.position.y += prev_room_size.y
 			
-			assert(i == 0 or (cur_room.bb.position.y == connections[i - 1].bb.position.y and is_horizontal) or(cur_room.bb.position.x == connections[i - 1].bb.position.x and not is_horizontal) )
+			#assert(i == 0 or (cur_room.bb.position.y == connections[i - 1].bb.position.y and is_horizontal) or(cur_room.bb.position.x == connections[i - 1].bb.position.x and not is_horizontal) )
 			
 			result.append(cur_room)
 		
@@ -300,7 +304,7 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 					if _check_interections(connections_bb, prev_rooms):
 						#if room.depth == 17:
 							#p
-						var test := room.place_connections(connections_bb)
+						var test := room.place_connections(connections_bb, closest_side)
 						prev_rooms.append_array(test)
 						
 						var main_room := room.connections[room.next_main_idx]
@@ -344,7 +348,7 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 					connections_bb.position = Vector2i(x, y)
 					
 					if _check_interections(connections_bb, prev_rooms):
-						var test := room.place_connections(connections_bb)
+						var test := room.place_connections(connections_bb, closest_side)
 						prev_rooms.append_array(test)
 						
 						var main_room := room.connections[room.next_main_idx]
