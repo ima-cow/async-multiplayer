@@ -17,13 +17,16 @@ class Room extends RefCounted:
 	var is_main: bool
 	var next_main_idx: int
 	var depth: int
+	var horizontal: bool
 	
 	var bb: Rect2i #bounding box
 	var connection_point := Vector2i.MAX
 	var scene: PackedScene
 	
 	
+	@warning_ignore("shadowed_variable")
 	func get_connections_size(horizontal: bool) -> Vector2i:
+		self.horizontal = horizontal
 		var connections_size := Vector2i.ZERO
 		
 		if horizontal:
@@ -396,7 +399,8 @@ func _init(seed: int, max_depth: int) -> void:
 	
 	starting_room = _gen_blank_connecctions(room)
 	_first_pass()
-	_place_rooms()
+	var placed := _place_rooms()
+	assert(placed, "Failed to place rooms")
 
 
 func _to_string(room: Room = starting_room) -> String:
