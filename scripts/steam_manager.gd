@@ -42,8 +42,11 @@ func _on_lobby_created(connect: int, lobby_id: int) -> void:
 	
 	multiplayer.multiplayer_peer = peer
 	
-	@warning_ignore("return_value_discarded")
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	var game_scene := preload("res://scenes/game.tscn").instantiate()
+	@warning_ignore("unsafe_property_access")
+	game_scene.dungeon = Dungeon.new(randi(), 20)
+	err = get_tree().change_scene_to_node(game_scene)
+	assert(!err, "Failed to change scene to game")
 	
 	print("created lobby")
 

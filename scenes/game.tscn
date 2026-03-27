@@ -1,53 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://blve3880bw2at"]
+[gd_scene format=3 uid="uid://ojf0nliwprse"]
 
-[ext_resource type="Script" uid="uid://ce1r28jklyfcs" path="res://scripts/game.gd" id="1_uwrxv"]
+[ext_resource type="Script" uid="uid://cepm8556tqenb" path="res://scripts/game.gd" id="1_uwrxv"]
+[ext_resource type="PackedScene" uid="uid://c10fawi8ryb7s" path="res://scenes/characters/test_character.tscn" id="2_yqjtg"]
 
-[node name="Game" type="Node"]
+[node name="Game" type="Node" unique_id=1134923629]
 script = ExtResource("1_uwrxv")
 
-[node name="Dungeon1" type="Button" parent="."]
-offset_left = 198.0
-offset_top = 287.0
-offset_right = 206.0
-offset_bottom = 295.0
-theme_override_font_sizes/font_size = 35
-text = "Dungeon 1
-"
-
-[node name="Dungeon2" type="Button" parent="."]
-offset_left = 501.0
-offset_top = 287.0
-offset_right = 593.0
-offset_bottom = 318.0
-theme_override_font_sizes/font_size = 35
-text = "Dungeon 2"
-
-[node name="Dungeon3" type="Button" parent="."]
-offset_left = 787.0
-offset_top = 284.0
-offset_right = 879.0
-offset_bottom = 315.0
-theme_override_font_sizes/font_size = 35
-text = "Dungeon 3"
-
-[node name="Save" type="Button" parent="."]
-offset_left = 348.0
-offset_top = 436.0
-offset_right = 434.0
-offset_bottom = 493.0
-theme_override_font_sizes/font_size = 35
-text = "Save"
-
-[node name="SaveAndQuit" type="Button" parent="."]
-offset_left = 605.0
-offset_top = 436.0
-offset_right = 691.0
-offset_bottom = 493.0
-theme_override_font_sizes/font_size = 35
-text = "Save and quit"
-
-[connection signal="pressed" from="Dungeon1" to="." method="_on_dungeon_1_pressed"]
-[connection signal="pressed" from="Dungeon2" to="." method="_on_dungeon_2_pressed"]
-[connection signal="pressed" from="Dungeon3" to="." method="_on_dungeon_3_pressed"]
-[connection signal="pressed" from="Save" to="." method="_on_save_pressed"]
-[connection signal="pressed" from="SaveAndQuit" to="." method="_on_save_and_quit_pressed"]
+[node name="TestCharacter" parent="." unique_id=1741776611 instance=ExtResource("2_yqjtg")]

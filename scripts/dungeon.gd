@@ -20,6 +20,7 @@ class Room extends RefCounted:
 	
 	var bb: Rect2i #bounding box
 	var connection_point := Vector2i.MAX
+	var scene: PackedScene
 	
 	
 	func get_connections_size(horizontal: bool) -> Vector2i:
@@ -115,6 +116,11 @@ class Room extends RefCounted:
 				assert(false, "not a valid room type")
 				return ""
 
+const ROOM_SCENES: Array[PackedScene] = [preload("res://scenes/rooms/room_1.tscn"),
+	preload("res://scenes/rooms/room_2.tscn"),
+	preload("res://scenes/rooms/room_3.tscn"),
+	preload("res://scenes/rooms/room_4.tscn"),
+	preload("res://scenes/rooms/room_5.tscn")]
 
 const SPLIT_3_WAYS := 0.35
 const MAX_BRANCH_SIZE := 8.0
@@ -169,15 +175,26 @@ func _gen_blank_connecctions(room: Room, depth_in_branch: int = 0, overall_depth
 	
 	return room
 
-func first_pass(room: Room = starting_room) -> void:
+func _first_pass(room: Room = starting_room) -> void:
+	var room_idx := rng.randi_range(0, ROOM_SCENES.size() - 1)
+	room.scene = ROOM_SCENES[room_idx]
+	var room_scene := ROOM_SCENES[room_idx].instantiate()
+	
+	@warning_ignore("unsafe_property_access")
+	var rect: Rect2i = room_scene.rect
+	rect.position = Vector2i.MAX
+	
+	room_scene.free()
+	
+	room.bb = rect
+	
 	match room.type:
 		Room.types.BLANK:
 			room.type = Room.types.NORMAL
-			room.bb = Rect2i(Vector2i.MAX, Vector2i(rng.randi_range(100, 120), rng.randi_range(100, 120)))
 		Room.types.START:
-			room.bb = Rect2i(Vector2i.ZERO, Vector2i(rng.randi_range(100, 120), rng.randi_range(100, 120)))
+			room.bb.position = Vector2i.ZERO
 		Room.types.END, Room.types.SPLIT_2, Room.types.SPLIT_3:
-			room.bb = Rect2i(Vector2i.MAX, Vector2i(rng.randi_range(100, 120), rng.randi_range(100, 120)))
+			pass
 		_:
 			assert(false, "invalid room type")
 	
@@ -187,7 +204,7 @@ func first_pass(room: Room = starting_room) -> void:
 	
 	for i in range(num_connections):
 		var next_room := room.connections[i]
-		first_pass(next_room)
+		_first_pass(next_room)
 
 
 class Edge extends RefCounted:
@@ -233,7 +250,7 @@ func _check_interections(target: Rect2i, rooms: Array[Room]) -> bool:
 
 
 @warning_ignore("integer_division")
-func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting_room]) -> bool:
+func _place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting_room]) -> bool:
 	assert(room.is_main)
 	
 	if room.depth == max_depth:
@@ -308,7 +325,7 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 						prev_rooms.append_array(test)
 						
 						var main_room := room.connections[room.next_main_idx]
-						room_placed = place_rooms(main_room, prev_rooms)
+						room_placed = _place_rooms(main_room, prev_rooms)
 						if room_placed:
 							@warning_ignore("integer_division")
 							var unoffset_x := x + (connections_size.x / 2) - x_offset
@@ -352,7 +369,7 @@ func place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [starting
 						prev_rooms.append_array(test)
 						
 						var main_room := room.connections[room.next_main_idx]
-						room_placed = place_rooms(main_room, prev_rooms)
+						room_placed = _place_rooms(main_room, prev_rooms)
 						if room_placed:
 							var unoffset_x := x + x_offset
 							@warning_ignore("integer_division")
@@ -378,6 +395,8 @@ func _init(seed: int, max_depth: int) -> void:
 	var room := Room.new(Room.types.START, 0, true)
 	
 	starting_room = _gen_blank_connecctions(room)
+	_first_pass()
+	_place_rooms()
 
 
 func _to_string(room: Room = starting_room) -> String:

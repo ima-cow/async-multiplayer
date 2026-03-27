@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://blve3880bw2at"]
+
+[ext_resource type="Script" uid="uid://ce1r28jklyfcs" path="res://scripts/testing/test_game.gd" id="1_nl0sk"]
+
+[node name="Game" type="Node" unique_id=2042261840]
+script = ExtResource("1_nl0sk")
+
+[node name="Dungeon1" type="Button" parent="." unique_id=1850680020]
+offset_left = 198.0
+offset_top = 287.0
+offset_right = 206.0
+offset_bottom = 295.0
+theme_override_font_sizes/font_size = 35
+text = "Dungeon 1
+"
+
+[node name="Dungeon2" type="Button" parent="." unique_id=243802511]
+offset_left = 501.0
+offset_top = 287.0
+offset_right = 593.0
+offset_bottom = 318.0
+theme_override_font_sizes/font_size = 35
+text = "Dungeon 2"
+
+[node name="Dungeon3" type="Button" parent="." unique_id=1606933249]
+offset_left = 787.0
+offset_top = 284.0
+offset_right = 879.0
+offset_bottom = 315.0
+theme_override_font_sizes/font_size = 35
+text = "Dungeon 3"
+
+[node name="Save" type="Button" parent="." unique_id=593122012]
+offset_left = 348.0
+offset_top = 436.0
+offset_right = 434.0
+offset_bottom = 493.0
+theme_override_font_sizes/font_size = 35
+text = "Save"
+
+[node name="SaveAndQuit" type="Button" parent="." unique_id=304111456]
+offset_left = 605.0
+offset_top = 436.0
+offset_right = 691.0
+offset_bottom = 493.0
+theme_override_font_sizes/font_size = 35
+text = "Save and quit"
+
+[connection signal="pressed" from="Dungeon1" to="." method="_on_dungeon_1_pressed"]
+[connection signal="pressed" from="Dungeon2" to="." method="_on_dungeon_2_pressed"]
+[connection signal="pressed" from="Dungeon3" to="." method="_on_dungeon_3_pressed"]
+[connection signal="pressed" from="Save" to="." method="_on_save_pressed"]
+[connection signal="pressed" from="SaveAndQuit" to="." method="_on_save_and_quit_pressed"]

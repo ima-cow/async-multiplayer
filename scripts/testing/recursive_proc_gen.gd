@@ -3,10 +3,8 @@ extends Node2D
 
 func _ready() -> void:
 	var dungeon := Dungeon.new(randi(), 15)
-	dungeon.first_pass()
 
-	var branches_placed := dungeon.place_rooms()
-	assert(branches_placed)
+
 
 
 	@warning_ignore("return_value_discarded")

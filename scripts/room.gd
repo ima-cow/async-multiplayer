@@ -1,6 +1,6 @@
 extends Node
 
-@export var rect := Rect2i(0, 0, 1000, 1000)
+@export var rect: Rect2i
 
 @onready var left_side: RigidBody2D = $Sides/LeftSide
 @onready var top_side: RigidBody2D = $Sides/TopSide
@@ -9,7 +9,11 @@ extends Node
 
 
 func _ready() -> void:
+	assert(left_side.position == Vector2.ZERO)
 	assert(left_side.position == top_side.position)
 	assert(right_side.position == bottom_side.position)
 	assert(Vector2i(left_side.position) == rect.position)
 	assert(Vector2i(right_side.position) == rect.end)
+	
+	
+ 

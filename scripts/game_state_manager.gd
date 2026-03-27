@@ -29,7 +29,7 @@ func set_state_or_diffs(key:StringName, value:Variant) -> void:
 
 
 @rpc("any_peer", "call_local")
-func _set_state(key:StringName, value:Variant) -> void:
+func _set_state(key: StringName, value: Variant) -> void:
 	print("state of: ",key," was set to: ",value," by id: ", multiplayer.get_remote_sender_id())
 	state[key] = value
 

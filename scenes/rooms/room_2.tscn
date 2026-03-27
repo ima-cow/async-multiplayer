@@ -1,7 +1,7 @@
-[gd_scene format=3 uid="uid://dwmxi4lhy468y"]
+[gd_scene format=3 uid="uid://cne7slia6np7c"]
 
-[ext_resource type="Script" uid="uid://j47wlyetra5k" path="res://scripts/room.gd" id="1_scgta"]
-[ext_resource type="Texture2D" uid="uid://dkqomfo1a0x7f" path="res://assets/blank_wall.png" id="2_hnbyo"]
+[ext_resource type="Script" uid="uid://j47wlyetra5k" path="res://scripts/room.gd" id="1_6a8el"]
+[ext_resource type="Texture2D" uid="uid://dkqomfo1a0x7f" path="res://assets/blank_wall.png" id="2_3e1ps"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_scgta"]
 normal = Vector2(1, 0)
@@ -14,9 +14,9 @@ normal = Vector2(-1, 0)
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_hnbyo"]
 
-[node name="Room1" type="Node" unique_id=1215866414]
-script = ExtResource("1_scgta")
-rect = Rect2i(0, 0, 1000, 1000)
+[node name="Room2" type="Node" unique_id=1215866414]
+script = ExtResource("1_6a8el")
+rect = Rect2i(0, 0, 1200, 1100)
 
 [node name="Sides" type="Node2D" parent="." unique_id=1608790148]
 
@@ -25,39 +25,39 @@ rect = Rect2i(0, 0, 1000, 1000)
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/LeftSide" unique_id=767502021]
 shape = SubResource("WorldBoundaryShape2D_scgta")
 
-[node name="Sprite2D" type="Sprite2D" parent="Sides/LeftSide" unique_id=1647484557]
+[node name="Sprite2D" type="Sprite2D" parent="Sides/LeftSide" unique_id=697996293]
 position = Vector2(-778, 294)
 scale = Vector2(15.5599985, 26.809998)
-texture = ExtResource("2_hnbyo")
+texture = ExtResource("2_3e1ps")
 
 [node name="TopSide" type="RigidBody2D" parent="Sides" unique_id=1106226343]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/TopSide" unique_id=1604400151]
 shape = SubResource("WorldBoundaryShape2D_s0h78")
 
-[node name="Sprite2D" type="Sprite2D" parent="Sides/TopSide" unique_id=955935295]
-position = Vector2(827.7965, -667.1192)
-scale = Vector2(-17.188581, 13.380577)
-texture = ExtResource("2_hnbyo")
+[node name="Sprite2D" type="Sprite2D" parent="Sides/TopSide" unique_id=550304804]
+position = Vector2(257, -497)
+scale = Vector2(-28.49857, 9.914999)
+texture = ExtResource("2_3e1ps")
 
 [node name="RightSide" type="RigidBody2D" parent="Sides" unique_id=601356785]
-position = Vector2(1000, 1000)
+position = Vector2(1200, 1100)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/RightSide" unique_id=683094765]
 shape = SubResource("WorldBoundaryShape2D_fbq1s")
 
-[node name="Sprite2D" type="Sprite2D" parent="Sides/RightSide" unique_id=390747654]
-position = Vector2(777, -269.00006)
+[node name="Sprite2D" type="Sprite2D" parent="Sides/RightSide" unique_id=1208375305]
+position = Vector2(780, -309.99994)
 scale = Vector2(15.5599985, 26.809998)
-texture = ExtResource("2_hnbyo")
+texture = ExtResource("2_3e1ps")
 
 [node name="BottomSide" type="RigidBody2D" parent="Sides" unique_id=1811502752]
-position = Vector2(1000, 1000)
+position = Vector2(1200, 1100)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/BottomSide" unique_id=337847759]
 shape = SubResource("WorldBoundaryShape2D_hnbyo")
 
-[node name="Sprite2D" type="Sprite2D" parent="Sides/BottomSide" unique_id=349922676]
-position = Vector2(-224, 668.99994)
-scale = Vector2(-17.188581, 13.380577)
-texture = ExtResource("2_hnbyo")
+[node name="Sprite2D" type="Sprite2D" parent="Sides/BottomSide" unique_id=1034664352]
+position = Vector2(-344, 498)
+scale = Vector2(-28.49857, 9.914999)
+texture = ExtResource("2_3e1ps")

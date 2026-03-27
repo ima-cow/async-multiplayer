@@ -1,0 +1,20 @@
+[gd_scene format=3 uid="uid://c10fawi8ryb7s"]
+
+[ext_resource type="Script" uid="uid://d2r52y45psggg" path="res://scripts/character_movement.gd" id="1_66gkc"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8jigk"]
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_66gkc"]
+
+[node name="TestCharacter" type="CharacterBody2D" unique_id=1741776611]
+script = ExtResource("1_66gkc")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1105384617]
+shape = SubResource("CapsuleShape2D_8jigk")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=597767106]
+position = Vector2(0.5, 0)
+scale = Vector2(21, 30)
+texture = SubResource("PlaceholderTexture2D_66gkc")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=887504022]
