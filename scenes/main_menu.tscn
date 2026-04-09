@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://d0gec3f7cuh0c"]
+[gd_scene format=3 uid="uid://d0gec3f7cuh0c"]
 
 [ext_resource type="Script" uid="uid://ckd2mimeq1qiu" path="res://scripts/main_menu.gd" id="1_l6cm7"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=2072039695]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_l6cm7")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Panel" type="Panel" parent="." unique_id=275266910]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,7 +19,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="CenterContainer" type="CenterContainer" parent="." unique_id=1301842004]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -27,73 +27,73 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Main" type="HBoxContainer" parent="CenterContainer"]
+[node name="Main" type="HBoxContainer" parent="CenterContainer" unique_id=1486927357]
 layout_mode = 2
 
-[node name="Central" type="VBoxContainer" parent="CenterContainer/Main"]
+[node name="Central" type="VBoxContainer" parent="CenterContainer/Main" unique_id=1675601923]
 layout_mode = 2
 
-[node name="HostGame" type="Button" parent="CenterContainer/Main/Central"]
+[node name="HostGame" type="Button" parent="CenterContainer/Main/Central" unique_id=153337935]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
 text = "Host Game"
 
-[node name="JoinGame" type="Button" parent="CenterContainer/Main/Central"]
+[node name="JoinGame" type="Button" parent="CenterContainer/Main/Central" unique_id=639540010]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
 text = "Join Game"
 
-[node name="Settings" type="Button" parent="CenterContainer/Main/Central"]
+[node name="Settings" type="Button" parent="CenterContainer/Main/Central" unique_id=306952602]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
 text = "Settings"
 
-[node name="Quit" type="Button" parent="CenterContainer/Main/Central"]
+[node name="Quit" type="Button" parent="CenterContainer/Main/Central" unique_id=804764940]
 layout_mode = 2
 theme_override_font_sizes/font_size = 60
 text = "Quit"
 
-[node name="VSeparator" type="VSeparator" parent="CenterContainer/Main"]
+[node name="VSeparator" type="VSeparator" parent="CenterContainer/Main" unique_id=1517769726]
 visible = false
 custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 
-[node name="Settings" type="TabContainer" parent="CenterContainer/Main"]
+[node name="Settings" type="TabContainer" parent="CenterContainer/Main" unique_id=37871522]
 visible = false
 layout_mode = 2
 
-[node name="HostGame" type="ScrollContainer" parent="CenterContainer/Main"]
+[node name="HostGame" type="ScrollContainer" parent="CenterContainer/Main" unique_id=2117744728]
 visible = false
 custom_minimum_size = Vector2(329, 0)
 layout_mode = 2
 
-[node name="SaveList" type="VBoxContainer" parent="CenterContainer/Main/HostGame"]
+[node name="SaveList" type="VBoxContainer" parent="CenterContainer/Main/HostGame" unique_id=1505378781]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/Main/HostGame/SaveList"]
+[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/Main/HostGame/SaveList" unique_id=608269248]
 custom_minimum_size = Vector2(329, 0)
 layout_mode = 2
 
-[node name="CreateGame" type="Button" parent="CenterContainer/Main/HostGame/SaveList/CenterContainer"]
+[node name="CreateGame" type="Button" parent="CenterContainer/Main/HostGame/SaveList/CenterContainer" unique_id=1887940128]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Create Game"
 
-[node name="JoinGame" type="ScrollContainer" parent="CenterContainer/Main"]
+[node name="JoinGame" type="ScrollContainer" parent="CenterContainer/Main" unique_id=226441840]
 visible = false
 custom_minimum_size = Vector2(329, 0)
 layout_mode = 2
 
-[node name="LobbieList" type="VBoxContainer" parent="CenterContainer/Main/JoinGame"]
+[node name="LobbieList" type="VBoxContainer" parent="CenterContainer/Main/JoinGame" unique_id=1944153137]
 unique_name_in_owner = true
 layout_mode = 2
 
-[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/Main/JoinGame/LobbieList"]
+[node name="CenterContainer" type="CenterContainer" parent="CenterContainer/Main/JoinGame/LobbieList" unique_id=1399549349]
 custom_minimum_size = Vector2(329, 0)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="CenterContainer/Main/JoinGame/LobbieList/CenterContainer"]
+[node name="Label" type="Label" parent="CenterContainer/Main/JoinGame/LobbieList/CenterContainer" unique_id=1764992727]
 layout_mode = 2
 theme_override_font_sizes/font_size = 40
 text = "Friends in game:"

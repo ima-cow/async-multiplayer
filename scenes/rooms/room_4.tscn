@@ -20,27 +20,29 @@ rect = Rect2i(0, 0, 800, 950)
 
 [node name="Sides" type="Node2D" parent="." unique_id=1608790148]
 
-[node name="LeftSide" type="RigidBody2D" parent="Sides" unique_id=1450250293]
+[node name="LeftSide" type="StaticBody2D" parent="Sides" unique_id=382111434]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/LeftSide" unique_id=767502021]
 shape = SubResource("WorldBoundaryShape2D_scgta")
 
 [node name="Sprite2D" type="Sprite2D" parent="Sides/LeftSide" unique_id=466002525]
 position = Vector2(-585.1526, 133.3833)
-scale = Vector2(-11.655518, 22.522667)
+rotation = -3.1415927
+scale = Vector2(11.655518, -22.522667)
 texture = ExtResource("2_yf4pg")
 
-[node name="TopSide" type="RigidBody2D" parent="Sides" unique_id=1106226343]
+[node name="TopSide" type="StaticBody2D" parent="Sides" unique_id=2044244089]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/TopSide" unique_id=1604400151]
 shape = SubResource("WorldBoundaryShape2D_s0h78")
 
 [node name="Sprite2D" type="Sprite2D" parent="Sides/TopSide" unique_id=870886301]
 position = Vector2(432, -487)
-scale = Vector2(-31.880972, 9.752869)
+rotation = -3.1415927
+scale = Vector2(31.880972, -9.752869)
 texture = ExtResource("2_yf4pg")
 
-[node name="RightSide" type="RigidBody2D" parent="Sides" unique_id=601356785]
+[node name="RightSide" type="StaticBody2D" parent="Sides" unique_id=1621776089]
 position = Vector2(800, 950)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/RightSide" unique_id=683094765]
@@ -48,10 +50,11 @@ shape = SubResource("WorldBoundaryShape2D_fbq1s")
 
 [node name="Sprite2D" type="Sprite2D" parent="Sides/RightSide" unique_id=293864263]
 position = Vector2(580, -257)
-scale = Vector2(-11.655518, 22.522667)
+rotation = -3.1415927
+scale = Vector2(11.655518, -22.522667)
 texture = ExtResource("2_yf4pg")
 
-[node name="BottomSide" type="RigidBody2D" parent="Sides" unique_id=1811502752]
+[node name="BottomSide" type="StaticBody2D" parent="Sides" unique_id=1103414505]
 position = Vector2(800, 950)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/BottomSide" unique_id=337847759]
@@ -59,5 +62,6 @@ shape = SubResource("WorldBoundaryShape2D_hnbyo")
 
 [node name="Sprite2D" type="Sprite2D" parent="Sides/BottomSide" unique_id=516283252]
 position = Vector2(92, 484)
-scale = Vector2(-31.880972, 9.752869)
+rotation = -3.1415927
+scale = Vector2(31.880972, -9.752869)
 texture = ExtResource("2_yf4pg")

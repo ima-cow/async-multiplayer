@@ -20,7 +20,7 @@ rect = Rect2i(0, 0, 1200, 1100)
 
 [node name="Sides" type="Node2D" parent="." unique_id=1608790148]
 
-[node name="LeftSide" type="RigidBody2D" parent="Sides" unique_id=1450250293]
+[node name="LeftSide" type="StaticBody2D" parent="Sides" unique_id=1328553047]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/LeftSide" unique_id=767502021]
 shape = SubResource("WorldBoundaryShape2D_scgta")
@@ -30,17 +30,18 @@ position = Vector2(-778, 294)
 scale = Vector2(15.5599985, 26.809998)
 texture = ExtResource("2_3e1ps")
 
-[node name="TopSide" type="RigidBody2D" parent="Sides" unique_id=1106226343]
+[node name="TopSide" type="StaticBody2D" parent="Sides" unique_id=1304710841]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/TopSide" unique_id=1604400151]
 shape = SubResource("WorldBoundaryShape2D_s0h78")
 
 [node name="Sprite2D" type="Sprite2D" parent="Sides/TopSide" unique_id=550304804]
 position = Vector2(257, -497)
-scale = Vector2(-28.49857, 9.914999)
+rotation = -3.1415927
+scale = Vector2(28.49857, -9.914999)
 texture = ExtResource("2_3e1ps")
 
-[node name="RightSide" type="RigidBody2D" parent="Sides" unique_id=601356785]
+[node name="RightSide" type="StaticBody2D" parent="Sides" unique_id=182094852]
 position = Vector2(1200, 1100)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/RightSide" unique_id=683094765]
@@ -51,7 +52,7 @@ position = Vector2(780, -309.99994)
 scale = Vector2(15.5599985, 26.809998)
 texture = ExtResource("2_3e1ps")
 
-[node name="BottomSide" type="RigidBody2D" parent="Sides" unique_id=1811502752]
+[node name="BottomSide" type="StaticBody2D" parent="Sides" unique_id=309800556]
 position = Vector2(1200, 1100)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Sides/BottomSide" unique_id=337847759]
@@ -59,5 +60,6 @@ shape = SubResource("WorldBoundaryShape2D_hnbyo")
 
 [node name="Sprite2D" type="Sprite2D" parent="Sides/BottomSide" unique_id=1034664352]
 position = Vector2(-344, 498)
-scale = Vector2(-28.49857, 9.914999)
+rotation = -3.1415927
+scale = Vector2(28.49857, -9.914999)
 texture = ExtResource("2_3e1ps")

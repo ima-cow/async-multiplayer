@@ -6,7 +6,10 @@
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_66gkc"]
 
-[node name="TestCharacter" type="CharacterBody2D" unique_id=1741776611]
+[node name="TestCharacter" type="RigidBody2D" unique_id=330495746]
+lock_rotation = true
+contact_monitor = true
+max_contacts_reported = 3
 script = ExtResource("1_66gkc")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1105384617]
