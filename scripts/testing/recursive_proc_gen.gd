@@ -1,12 +1,8 @@
 extends Node2D
 
-
 func _ready() -> void:
+	#4014574023
 	var dungeon := Dungeon.new(randi(), 15)
-
-
-
-
 	@warning_ignore("return_value_discarded")
 	draw.connect(draw_rooms.bind(dungeon))
 
@@ -14,7 +10,7 @@ func draw_rooms(dungeon: Dungeon, room: Dungeon.Room = dungeon.starting_room) ->
 	if room.depth == 0:
 		draw_rect(dungeon.starting_room.bb, Color.PURPLE)
 		draw_rect(dungeon.starting_room.bb, Color.BLACK, false)
-		draw_circle(dungeon.starting_room.connection_point, 5, Color.BLACK)
+		draw_circle(dungeon.starting_room.connection_point, 25, Color.BLACK)
 		draw_string(ThemeDB.fallback_font, dungeon.starting_room.bb.position + Vector2i(3, ThemeDB.fallback_font_size), "0")
 
 
@@ -31,7 +27,7 @@ func draw_rooms(dungeon: Dungeon, room: Dungeon.Room = dungeon.starting_room) ->
 			draw_rect(r.bb, Color.BLUE)
 		draw_rect(r.bb, Color.BLACK, false)
 		draw_string(ThemeDB.fallback_font, r.bb.position + Vector2i(1, ThemeDB.fallback_font_size), str(r.depth))
-		draw_circle(r.connection_point, 5, Color.BLACK)
+		draw_circle(r.connection_point, 25, Color.BLACK)
 
 	if room.depth == dungeon.max_depth:
 		return

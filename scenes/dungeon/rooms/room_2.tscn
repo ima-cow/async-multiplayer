@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cne7slia6np7c"]
 
-[ext_resource type="Script" uid="uid://j47wlyetra5k" path="res://scripts/room.gd" id="1_6a8el"]
-[ext_resource type="Texture2D" uid="uid://dkqomfo1a0x7f" path="res://assets/blank_wall.png" id="2_3e1ps"]
+[ext_resource type="Script" uid="uid://j47wlyetra5k" path="res://scripts/room.gd" id="1_8w7k7"]
+[ext_resource type="Texture2D" uid="uid://dkqomfo1a0x7f" path="res://assets/blank_wall.png" id="2_vfiaf"]
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_scgta"]
 normal = Vector2(1, 0)
@@ -14,8 +14,8 @@ normal = Vector2(-1, 0)
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_hnbyo"]
 
-[node name="Room2" type="Node" unique_id=1215866414]
-script = ExtResource("1_6a8el")
+[node name="Room2" type="Node2D" unique_id=482662750]
+script = ExtResource("1_8w7k7")
 rect = Rect2i(0, 0, 1200, 1100)
 
 [node name="Sides" type="Node2D" parent="." unique_id=1608790148]
@@ -28,7 +28,7 @@ shape = SubResource("WorldBoundaryShape2D_scgta")
 [node name="Sprite2D" type="Sprite2D" parent="Sides/LeftSide" unique_id=697996293]
 position = Vector2(-778, 294)
 scale = Vector2(15.5599985, 26.809998)
-texture = ExtResource("2_3e1ps")
+texture = ExtResource("2_vfiaf")
 
 [node name="TopSide" type="StaticBody2D" parent="Sides" unique_id=1304710841]
 
@@ -39,7 +39,7 @@ shape = SubResource("WorldBoundaryShape2D_s0h78")
 position = Vector2(257, -497)
 rotation = -3.1415927
 scale = Vector2(28.49857, -9.914999)
-texture = ExtResource("2_3e1ps")
+texture = ExtResource("2_vfiaf")
 
 [node name="RightSide" type="StaticBody2D" parent="Sides" unique_id=182094852]
 position = Vector2(1200, 1100)
@@ -50,7 +50,7 @@ shape = SubResource("WorldBoundaryShape2D_fbq1s")
 [node name="Sprite2D" type="Sprite2D" parent="Sides/RightSide" unique_id=1208375305]
 position = Vector2(780, -309.99994)
 scale = Vector2(15.5599985, 26.809998)
-texture = ExtResource("2_3e1ps")
+texture = ExtResource("2_vfiaf")
 
 [node name="BottomSide" type="StaticBody2D" parent="Sides" unique_id=309800556]
 position = Vector2(1200, 1100)
@@ -62,4 +62,4 @@ shape = SubResource("WorldBoundaryShape2D_hnbyo")
 position = Vector2(-344, 498)
 rotation = -3.1415927
 scale = Vector2(28.49857, -9.914999)
-texture = ExtResource("2_3e1ps")
+texture = ExtResource("2_vfiaf")

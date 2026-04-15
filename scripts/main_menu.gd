@@ -1,6 +1,6 @@
 extends Control
 
-var loading_screen := preload("res://scenes/main_menu.tscn")
+var loading_screen := preload("res://scenes/ui/loading_screen.tscn")
 
 var _settings:Dictionary[StringName, Variant] = {
 	&"username":""

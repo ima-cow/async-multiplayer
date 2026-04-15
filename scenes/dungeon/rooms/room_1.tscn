@@ -14,7 +14,7 @@ normal = Vector2(-1, 0)
 
 [sub_resource type="WorldBoundaryShape2D" id="WorldBoundaryShape2D_hnbyo"]
 
-[node name="Room1" type="Node" unique_id=1215866414]
+[node name="Room1" type="Node2D" unique_id=1564629011]
 script = ExtResource("1_scgta")
 rect = Rect2i(0, 0, 1000, 1000)
 

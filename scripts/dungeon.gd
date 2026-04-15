@@ -119,11 +119,11 @@ class Room extends RefCounted:
 				assert(false, "not a valid room type")
 				return ""
 
-const ROOM_SCENES: Array[PackedScene] = [preload("res://scenes/rooms/room_1.tscn"),
-	preload("res://scenes/rooms/room_2.tscn"),
-	preload("res://scenes/rooms/room_3.tscn"),
-	preload("res://scenes/rooms/room_4.tscn"),
-	preload("res://scenes/rooms/room_5.tscn")]
+const ROOM_SCENES: Array[PackedScene] = [preload("res://scenes/dungeon/rooms/room_1.tscn"),
+	preload("res://scenes/dungeon/rooms/room_2.tscn"),
+	preload("res://scenes/dungeon/rooms/room_3.tscn"),
+	preload("res://scenes/dungeon/rooms/room_4.tscn"),
+	preload("res://scenes/dungeon/rooms/room_5.tscn")]
 
 const SPLIT_3_WAYS := 0.35
 const MAX_BRANCH_SIZE := 8.0
@@ -290,8 +290,7 @@ func _place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [startin
 		var closest_end := closest_to_cent.end_1 if end_1_closer else closest_to_cent.end_2
 		var sec_closest_end := closest_to_cent.end_2 if end_1_closer else closest_to_cent.end_1
 		
-		const BUFFER_SPACE := 10
-		const CENTER_INDEX := 1
+		const BUFFER_SPACE := 50
 		var closest_side := closest_to_cent.side
 		match closest_side:
 			SIDE_TOP, SIDE_BOTTOM:
@@ -301,18 +300,9 @@ func _place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [startin
 				var flow_dir := signi(sec_closest_end.x - closest_end.x)
 				assert(flow_dir != 0)
 				
-				var x_offset := 0
-				if room.connections.size() > 2 and room.next_main_idx != CENTER_INDEX:
-					x_offset = room.connections[1].bb.size.x
-					
-					const RIGHT_INDEX := 2 
-					if room.next_main_idx == RIGHT_INDEX:
-						x_offset *= -1
-				
-				@warning_ignore("integer_division")
-				var x_min := closest_end.x - (connections_size.x / 2) + x_offset
-				@warning_ignore("integer_division")
-				var x_max := sec_closest_end.x - (connections_size.x / 2) + x_offset
+				var x_offset := room.connections[0].bb.size.x
+				var x_min := closest_end.x - x_offset
+				var x_max := sec_closest_end.x - x_offset
 				
 				var main_side := closest_side == SIDE_TOP
 				var y_offset := connections_size.y if main_side else 0
@@ -322,8 +312,6 @@ func _place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [startin
 					connections_bb.position = Vector2i(x, y)
 					
 					if _check_interections(connections_bb, prev_rooms):
-						#if room.depth == 17:
-							#p
 						var test := room.place_connections(connections_bb, closest_side)
 						prev_rooms.append_array(test)
 						
@@ -331,7 +319,7 @@ func _place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [startin
 						room_placed = _place_rooms(main_room, prev_rooms)
 						if room_placed:
 							@warning_ignore("integer_division")
-							var unoffset_x := x + (connections_size.x / 2) - x_offset
+							var unoffset_x := x + x_offset
 							var unoffset_y := y + y_offset
 							
 							var connection_point := Vector2i(unoffset_x, unoffset_y)
@@ -347,18 +335,10 @@ func _place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [startin
 				var flow_dir := signi(sec_closest_end.y - closest_end.y)
 				assert(flow_dir != 0)
 				
-				var y_offset := 0
-				if room.connections.size() > 2 and room.next_main_idx != CENTER_INDEX:
-					y_offset = room.connections[1].bb.size.y
-					
-					const LEFT_INDEX := 0
-					if room.next_main_idx == LEFT_INDEX:
-						y_offset *= -1
+				var y_offset := room.connections[0].bb.size.y
 				
-				@warning_ignore("integer_division")
-				var y_min := closest_end.y - (connections_size.y / 2) - y_offset
-				@warning_ignore("integer_division")
-				var y_max := sec_closest_end.y - (connections_size.y / 2) - y_offset
+				var y_min := closest_end.y - y_offset
+				var y_max := sec_closest_end.y - y_offset
 				
 				var main_side := closest_side == SIDE_LEFT
 				var x_offset := connections_size.x if main_side else 0
@@ -375,8 +355,7 @@ func _place_rooms(room: Room = starting_room, prev_rooms: Array[Room] = [startin
 						room_placed = _place_rooms(main_room, prev_rooms)
 						if room_placed:
 							var unoffset_x := x + x_offset
-							@warning_ignore("integer_division")
-							var unoffset_y := y + (connections_size.y / 2) + y_offset
+							var unoffset_y := y + y_offset
 							
 							var connection_point := Vector2i(unoffset_x, unoffset_y)
 							room.connection_point = connection_point

@@ -1,13 +1,12 @@
-extends Node
+extends Node2D
 
 var dungeon: Dungeon
 var current_room: Dungeon.Room
-var current_room_scene: Node
+var current_room_scene: Node2D
 
 @onready var player: RigidBody2D = $TestCharacter
 
-var door_scene := preload("res://scenes/door.tscn")
-
+var door_scene := preload("res://scenes/dungeon/door.tscn")
 
 func _ready() -> void:
 	assert(dungeon != null)
@@ -25,8 +24,15 @@ func _ready() -> void:
 	player.position = dungeon.starting_room.bb.size / 2
 
 
-func _init_new_room(room: Node) -> void:
-	print(room.room.connections)
+
+
+func _init_new_room(room: Node2D) -> void:
+	@warning_ignore("unsafe_property_access")
+	if not room.room.horizontal:
+		room.rotation_degrees += 90
+		@warning_ignore("unsafe_property_access")
+		room.position.x += room.room.bb.size.x
+	
 	@warning_ignore("unsafe_property_access")
 	for next_room: Dungeon.Room in room.room.connections:
 		var door: Node2D = door_scene.instantiate()
@@ -55,8 +61,6 @@ func _init_new_room(room: Node) -> void:
 func _on_door_body_entered(body: Node, door: Node2D) -> void:
 	if body != player:
 		return
-	print("contact")
-	
 	
 	@warning_ignore("unsafe_property_access")
 	var new_room: Dungeon.Room = door.second_room if not door.passed else door.first_room
@@ -66,8 +70,6 @@ func _on_door_body_entered(body: Node, door: Node2D) -> void:
 	@warning_ignore("unsafe_property_access")
 	new_room_scene.room = new_room
 	current_room_scene = new_room_scene
-	_init_new_room(new_room_scene)
+	_init_new_room(current_room_scene)
 	
-	#add_child(new_room_scene)
 	call_deferred("add_child", new_room_scene)
-	#print("swapped")
